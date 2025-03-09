@@ -47,7 +47,8 @@ async function getCategoriesWithPosts() {
 
 export async function generateMetadata() {
   return {
-    title: "Categories - Garhlz's blog",
+    title: "分类导航 - Garhlz's blog",
+    description: "探索博客文章的专题分类，发现更多深度内容"
   };
 }
 
@@ -55,40 +56,71 @@ export default async function CategoriesPage() {
   const categories = await getCategoriesWithPosts();
 
   return (
-    <div className="max-w-4xl mx-auto mt-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">文章分类</h1>
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* 页面标题 */}
+      <header className="mb-8 sm:mb-12 text-center">
+        <h1 className="text-3xl font-bold text-gray-800 tracking-tight sm:text-4xl">
+        文章分类
+        </h1>
+        <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
+          共有 {categories.length} 个分类
+        </p>
+      </header>
 
-      {categories.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm p-6 text-center">
-          <p className="text-gray-600">暂无分类</p>
-          <p className="text-gray-500 mt-2">请在文章的 frontmatter 中添加 categories 字段</p>
-        </div>
-      ) : (
-        <div className="space-y-8">
-          {categories.map((category) => (
-            <div key={category.name} className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex items-center mb-4">
-                <Tag className="h-5 w-5 mr-2 text-[rgb(var(--primary-color))]" />
-                <h2 className="text-2xl font-semibold text-gray-900">{category.name}</h2>
-                <span className="ml-2 text-gray-500">({category.count})</span>
-              </div>
-              <ul className="space-y-2 pl-7">
-                {category.posts.map((post) => (
-                  <li key={post.slug} className="flex items-baseline">
-                    <span className="text-gray-500 text-sm w-24 flex-shrink-0">{post.date}</span>
-                    <Link
-                      href={`/post/${post.slug}`}
-                      className="text-[rgb(var(--primary-color))] hover:text-[rgb(var(--primary-hover))] hover:underline"
+      {/* 内容主体 */}
+      <div className="max-w-5xl mx-auto">
+        {categories.length === 0 ? (
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 text-center shadow-xl border-2 border-dashed border-gray-200">
+            <div className="text-6xl mb-4">📂</div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">分类目录待完善</h2>
+            <p className="text-gray-600">
+              请在文章frontmatter中添加 <code className="bg-gray-100 px-2 py-1 rounded">categories</code> 字段
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-6 sm:gap-8">
+            {categories.map((category) => (
+              <section 
+                key={category.name}
+                className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100"
+              >
+                {/* 分类标题 */}
+                <div className="p-6 border-b border-gray-100 flex items-center space-x-3 bg-gradient-to-r from-primary/5 to-transparent">
+                  <Tag className="h-6 w-6 text-primary" />
+                  <div className="flex items-baseline space-x-2">
+                    <h2 className="text-2xl font-bold text-gray-900">{category.name}</h2>
+                    <span className="text-primary font-medium">{category.count}篇</span>
+                  </div>
+                </div>
+
+                {/* 文章列表 */}
+                <ul className="divide-y divide-gray-100/50">
+                  {category.posts.map((post) => (
+                    <li 
+                      key={post.slug}
+                      className="group hover:bg-gray-50/50 transition-colors duration-200"
                     >
-                      {post.title}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      )}
+                      <Link
+                        href={`/post/${post.slug}`}
+                        className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:px-6"
+                      >
+                        <div className="flex-1">
+                          <h3 className="text-base font-medium text-gray-900 group-hover:text-primary transition-colors">
+                            {post.title}
+                          </h3>
+                        </div>
+                        <time className="text-sm text-gray-500 mt-1 sm:mt-0 sm:ml-4 sm:w-28 sm:text-right">
+                          {post.date}
+                        </time>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
