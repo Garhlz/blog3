@@ -1,0 +1,479 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground: 51, 51, 51;
+  --background: 250, 248, 245;
+}
+
+body {
+  color: rgb(var(--foreground));
+  background: rgb(var(--background));
+  
+}
+
+@layer components {
+  /* 自定义 Markdown 内容样式 */
+  .markdown-content {
+    @apply text-gray-800 leading-relaxed;
+  }
+
+  .markdown-content h1 {
+    @apply text-3xl font-bold mt-8 mb-4 scroll-mt-20;
+  }
+
+  .markdown-content h2 {
+    @apply text-2xl font-bold mt-6 mb-3 scroll-mt-20;
+  }
+
+  .markdown-content h3 {
+    @apply text-xl font-bold mt-5 mb-2 scroll-mt-20;
+  }
+
+  .markdown-content h4 {
+    @apply text-lg font-bold mt-4 mb-2 scroll-mt-20;
+  }
+
+  .markdown-content p {
+    @apply my-4;
+  }
+
+  .markdown-content ul {
+    @apply list-disc pl-6 my-4;
+  }
+
+  .markdown-content ol {
+    @apply list-decimal pl-6 my-4;
+  }
+
+  .markdown-content li {
+    @apply mb-1;
+  }
+
+  .markdown-content a {
+    @apply text-primary hover:text-primary-hover underline;
+  }
+
+  .markdown-content blockquote {
+    @apply border-l-4 border-primary pl-4 italic my-4 text-gray-600;
+  }
+
+  .markdown-content img {
+    @apply max-w-full rounded-lg my-6 mx-auto;
+  }
+
+  .markdown-content pre {
+    @apply bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto my-6;
+  }
+
+  .markdown-content code {
+    @apply font-mono text-sm;
+  }
+
+  .markdown-content :not(pre) > code {
+    @apply bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded text-sm font-mono;
+  }
+
+  .markdown-content table {
+    @apply w-full border-collapse my-6;
+  }
+
+  .markdown-content th {
+    @apply bg-gray-100 border border-gray-300 px-4 py-2 text-left;
+  }
+
+  .markdown-content td {
+    @apply border border-gray-300 px-4 py-2;
+  }
+
+  .markdown-content hr {
+    @apply my-8 border-t border-gray-200;
+  }
+
+  /* 代码高亮样式 */
+  .token.comment,
+  .token.prolog,
+  .token.doctype,
+  .token.cdata {
+    @apply text-gray-400;
+  }
+
+  .token.punctuation {
+    @apply text-gray-300;
+  }
+
+  .token.property,
+  .token.tag,
+  .token.boolean,
+  .token.number,
+  .token.constant,
+  .token.symbol,
+  .token.deleted {
+    @apply text-yellow-300;
+  }
+
+  .token.selector,
+  .token.attr-name,
+  .token.string,
+  .token.char,
+  .token.builtin,
+  .token.inserted {
+    @apply text-green-300;
+  }
+
+  .token.operator,
+  .token.entity,
+  .token.url,
+  .language-css .token.string,
+  .style .token.string {
+    @apply text-yellow-100;
+  }
+
+  .token.atrule,
+  .token.attr-value,
+  .token.keyword {
+    @apply text-blue-300;
+  }
+
+  .token.function,
+  .token.class-name {
+    @apply text-pink-300;
+  }
+
+  .token.regex,
+  .token.important,
+  .token.variable {
+    @apply text-yellow-200;
+  }
+
+  /* 目录样式 */
+  .table-of-contents {
+    @apply bg-white rounded-lg shadow-sm p-4 mb-6 border border-gray-100;
+  }
+
+  .table-of-contents h2 {
+    @apply text-xl font-bold mb-3 text-gray-800;
+  }
+
+  .table-of-contents ul {
+    @apply list-none pl-0;
+  }
+
+  .table-of-contents li {
+    @apply mb-2;
+  }
+
+  .table-of-contents a {
+    @apply text-primary hover:text-primary-hover no-underline;
+  }
+
+  .table-of-contents .toc-level-2 {
+    @apply pl-0;
+  }
+
+  .table-of-contents .toc-level-3 {
+    @apply pl-4;
+  }
+
+  .table-of-contents .toc-level-4 {
+    @apply pl-8;
+  }
+
+
+  /* 分类和标签样式 */
+  .category-tag,
+  .tag {
+    @apply inline-block px-2 py-1 bg-opacity-10 bg-primary text-primary rounded-md text-sm mr-2 mb-2;
+  }
+
+  .category-tag:hover,
+  .tag:hover {
+    @apply bg-opacity-20;
+  }
+
+  /* 侧边目录导航 */
+.toc-sidebar {
+  @apply fixed right-6 top-20 w-full max-h-[calc(100vh-6rem)] overflow-y-auto hidden lg:block transition-opacity duration-300;
+}
+
+
+.toc-sidebar.visible {
+  @apply opacity-100;
+}
+
+.toc-sidebar.dimmed {
+  opacity: 0.2;
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.toc-sidebar-inner {
+  @apply bg-gray-50/90 backdrop-blur-sm rounded-xl shadow-md p-5 border border-gray-200/50 relative;
+}
+
+.toc-sidebar h3 {
+  @apply text-base font-semibold mb-4 text-gray-900;
+}
+
+.toc-sidebar ul {
+  @apply list-none pl-0 text-sm;
+}
+
+.toc-sidebar li {
+  @apply mb-2;
+}
+
+.toc-sidebar a {
+  @apply text-gray-700 hover:text-primary hover:bg-gray-100 no-underline block py-1.5 px-2 rounded border-l-2 border-transparent transition-colors;
+}
+
+.toc-sidebar .toc-level-2 {
+  @apply pl-0;
+}
+
+.toc-sidebar .toc-level-3 {
+  @apply pl-4;
+}
+
+.toc-sidebar .toc-level-4 {
+  @apply pl-8;
+}
+
+/* 侧边栏垂直进度条 */
+.toc-progress-bar {
+  @apply absolute top-0 left-0 w-1 bg-primary/80 z-10 transition-all duration-300;
+}
+
+.image-wrapper {
+  max-width: 100%;
+  margin: 1rem 0;
+}
+
+.image-wrapper img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem; /* 可选：圆角效果 */
+}
+
+
+
+/* 顶部目录概览样式 - 竖直展开设计 */
+.top-toc {
+  margin-bottom: 2rem;
+  border-radius: 0.5rem;
+  background-color: #f8fafc;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.top-toc.collapsed {
+  max-height: 3.5rem;
+}
+
+.top-toc.expanded {
+  max-height: 50vh;
+}
+
+.top-toc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.top-toc-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.expand-button {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s;
+}
+
+.expand-button:hover {
+  background-color: #e2e8f0;
+}
+
+.top-toc-content {
+  padding: 1rem 1.5rem;
+  max-height: calc(50vh - 3.5rem);
+  overflow-y: auto;
+}
+
+/* 竖直展开的目录样式 */
+.top-toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.top-toc-item {
+  margin-bottom: 0.5rem;
+}
+
+.top-toc-item a {
+  display: block;
+  padding: 0.4rem 0;
+  color: #334155;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.top-toc-item a:hover {
+  color: #2563eb;
+}
+
+.top-toc-item.active a {
+  color: #2563eb;
+  font-weight: 500;
+}
+
+.top-toc-item.depth-1 {
+  font-weight: 600;
+}
+
+.top-toc-item.depth-2 {
+  padding-left: 1.25rem;
+}
+
+.top-toc-item.depth-3 {
+  padding-left: 2.5rem;
+  font-size: 0.9375rem;
+}
+
+.top-toc-item.depth-4 {
+  padding-left: 3.75rem;
+  font-size: 0.875rem;
+}
+
+/* 侧边栏目录样式 */
+.markdown-container {
+  display: flex;
+  gap: 2rem;
+}
+
+.markdown-content {
+  flex: 1;
+  max-width: calc(100% - 14rem);
+}
+
+.toc-sidebar {
+  position: sticky;
+  top: 5rem;
+  height: calc(100vh - 10rem);
+  overflow-y: auto;
+  padding-right: 1rem;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.toc-sidebar-inner {
+  padding-left: 1rem;
+  border-left: 2px solid #e2e8f0;
+  position: relative; /* 为进度指示器提供定位上下文 */
+}
+
+.toc-sidebar h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #334155;
+}
+
+.toc-sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.toc-sidebar li {
+  margin-bottom: 0.5rem;
+  position: relative;
+}
+
+.toc-sidebar li a {
+  display: block;
+  color: #64748b;
+  text-decoration: none;
+  font-size: 0.875rem;
+  padding: 0.25rem 0;
+  transition: color 0.2s;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toc-sidebar li a:hover {
+  color: #0f172a;
+}
+
+.toc-sidebar li.active-heading a {
+  color: #2563eb;
+  font-weight: 500;
+}
+
+.toc-level-1 {
+  font-weight: 500;
+}
+
+.toc-level-2 {
+  padding-left: 0.75rem;
+}
+
+.toc-level-3 {
+  padding-left: 1.5rem;
+}
+
+.toc-level-4 {
+  padding-left: 2.25rem;
+  font-size: 0.8125rem;
+}
+
+/* 进度指示器 - 改为绝对定位，与活动项目对齐 */
+.toc-progress-indicator {
+  position: absolute;
+  left: 0;
+  width: 2px;
+  background-color: #2563eb;
+  transition: top 0.3s ease, height 0.3s ease;
+}
+
+/* 小屏幕样式调整 */
+@media (max-width: 1024px) {
+  .markdown-container {
+    flex-direction: column;
+  }
+  
+  .markdown-content {
+    max-width: 100%;
+  }
+  
+  .toc-sidebar {
+    position: relative;
+    top: 0;
+    height: auto;
+    max-height: 50vh;
+    width: 100% !important;
+    margin-bottom: 2rem;
+  }
+}
+
+}
+

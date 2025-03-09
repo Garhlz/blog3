@@ -1,0 +1,3187 @@
+Directory structure:
+└── blog3/
+    ├── README.md
+    ├── components.json
+    ├── jsconfig.json
+    ├── next.config.js
+    ├── package.json
+    ├── postcss.config.js
+    ├── tailwind.config.js
+    ├── .eslintrc.json
+    ├── app/
+    │   ├── globals.css
+    │   ├── layout.jsx
+    │   ├── page.jsx
+    │   ├── about/
+    │   │   └── page.jsx
+    │   ├── archives/
+    │   │   └── page.jsx
+    │   ├── categories/
+    │   │   ├── page.jsx
+    │   │   └── [slug]/
+    │   │       └── page.jsx
+    │   ├── fonts/
+    │   │   ├── GeistMonoVF.woff
+    │   │   └── GeistVF.woff
+    │   └── post/
+    │       └── [slug]/
+    │           └── page.jsx
+    ├── components/
+    │   ├── Footer.jsx
+    │   ├── Header.jsx
+    │   └── MarkdownRenderer.jsx
+    ├── content/
+    │   ├── blog-features-demo.md
+    │   ├── blog-usage-guide.md
+    │   ├── 刷题日记25-03-05.md
+    │   ├── 刷题日记25-03-06.md
+    │   ├── 刷题日记25-03-07.md
+    │   ├── 刷题日记25-03-08.md
+    │   └── 博客开发日志.md
+    ├── lib/
+    │   ├── markdown.js
+    │   └── utils.js
+    └── public/
+        └── images/
+
+================================================
+File: README.md
+================================================
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+## Getting Started
+
+First, run the development server:
+
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+
+
+================================================
+File: components.json
+================================================
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "rsc": true,
+  "tsx": false,
+  "tailwind": {
+    "config": "tailwind.config.ts",
+    "css": "app/globals.css",
+    "baseColor": "neutral",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
+  },
+  "iconLibrary": "lucide"
+}
+
+
+================================================
+File: jsconfig.json
+================================================
+{
+    "compilerOptions": {
+      "baseUrl": ".",
+      "paths": {
+        "@/*": ["./*"]
+      }
+    }
+  }
+
+
+================================================
+File: next.config.js
+================================================
+module.exports = {
+    
+  };
+  
+  
+
+
+================================================
+File: package.json
+================================================
+{
+  "name": "next-blog",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "postcss": "postcss app/globals.css -o app/output.css"
+  },
+  "dependencies": {
+    "gray-matter": "^4.0.3",
+    "katex": "^0.16.21",
+    "lucide-react": "^0.294.0",
+    "next": "14.0.4",
+    "react": "^18",
+    "react-dom": "^18",
+    "rehype-katex": "^7.0.1",
+    "rehype-prism-plus": "^1.6.3",
+    "rehype-raw": "^7.0.0",
+    "rehype-stringify": "^10.0.0",
+    "remark": "^15.0.1",
+    "remark-gfm": "^4.0.0",
+    "remark-html": "^16.0.1",
+    "remark-math": "^6.0.0",
+    "remark-parse": "^11.0.0",
+    "remark-rehype": "^11.0.0",
+    "tailwindcss-animate": "^1.0.7",
+    "unified": "^11.0.4",
+    "unist-util-visit": "^5.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.16",
+    "autoprefixer": "^10.4.15",
+    "eslint": "^8",
+    "eslint-config-next": "14.0.4",
+    "postcss": "^8.4.31",
+    "postcss-cli": "^10.1.0",
+    "tailwindcss": "^3.4.17"
+  }
+}
+
+
+
+================================================
+File: postcss.config.js
+================================================
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {}, // 娣诲姞 autoprefixer 鎻掍欢
+  },
+};
+
+
+
+
+================================================
+File: tailwind.config.js
+================================================
+module.exports = {
+  darkMode: ["class"],
+  content: [
+    "./app/**/*.{js,jsx}",
+    "./components/**/*.{js,jsx}",
+    "./content/**/*.{md,mdx}", // 支持 Markdown 中的类名
+  ],
+  theme: {
+    extend: {
+      colors: {
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: "rgb(186, 163, 132)",
+        "primary-hover": "rgb(166, 143, 112)",
+        "header-bg": "rgb(245, 242, 235)",
+        "card-bg": "rgb(255, 255, 255)",
+        secondary: {
+          DEFAULT: "#10b981",
+          foreground: "#ffffff",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
+      typography: {
+        DEFAULT: {
+          css: {
+            maxWidth: "100%",
+            color: "#333",
+            a: {
+              color: "rgb(186, 163, 132)",
+              "&:hover": {
+                color: "rgb(166, 143, 112)",
+              },
+            },
+            pre: {
+              backgroundColor: "#1f2937",
+              color: "#e5e7eb",
+              overflowX: "auto",
+              fontSize: "0.875em",
+            },
+            code: {
+              color: "#111827",
+              backgroundColor: "#f3f4f6",
+              paddingLeft: "0.25rem",
+              paddingRight: "0.25rem",
+              paddingTop: "0.125rem",
+              paddingBottom: "0.125rem",
+              borderRadius: "0.25rem",
+            },
+            "code::before": {
+              content: '""',
+            },
+            "code::after": {
+              content: '""',
+            },
+            "pre code": {
+              color: "inherit",
+              backgroundColor: "transparent",
+              padding: "0",
+            },
+          },
+        },
+      },
+    },
+  },
+  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
+}
+
+
+
+
+================================================
+File: .eslintrc.json
+================================================
+{
+  "extends": ["next/core-web-vitals", "next/typescript"]
+}
+
+
+
+================================================
+File: app/globals.css
+================================================
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground: 51, 51, 51;
+  --background: 250, 248, 245;
+}
+
+body {
+  color: rgb(var(--foreground));
+  background: rgb(var(--background));
+  
+}
+
+@layer components {
+  /* 自定义 Markdown 内容样式 */
+  .markdown-content {
+    @apply text-gray-800 leading-relaxed;
+  }
+
+  .markdown-content h1 {
+    @apply text-3xl font-bold mt-8 mb-4 scroll-mt-20;
+  }
+
+  .markdown-content h2 {
+    @apply text-2xl font-bold mt-6 mb-3 scroll-mt-20;
+  }
+
+  .markdown-content h3 {
+    @apply text-xl font-bold mt-5 mb-2 scroll-mt-20;
+  }
+
+  .markdown-content h4 {
+    @apply text-lg font-bold mt-4 mb-2 scroll-mt-20;
+  }
+
+  .markdown-content p {
+    @apply my-4;
+  }
+
+  .markdown-content ul {
+    @apply list-disc pl-6 my-4;
+  }
+
+  .markdown-content ol {
+    @apply list-decimal pl-6 my-4;
+  }
+
+  .markdown-content li {
+    @apply mb-1;
+  }
+
+  .markdown-content a {
+    @apply text-primary hover:text-primary-hover underline;
+  }
+
+  .markdown-content blockquote {
+    @apply border-l-4 border-primary pl-4 italic my-4 text-gray-600;
+  }
+
+  .markdown-content img {
+    @apply max-w-full rounded-lg my-6 mx-auto;
+  }
+
+  .markdown-content pre {
+    @apply bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto my-6;
+  }
+
+  .markdown-content code {
+    @apply font-mono text-sm;
+  }
+
+  .markdown-content :not(pre) > code {
+    @apply bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded text-sm font-mono;
+  }
+
+  .markdown-content table {
+    @apply w-full border-collapse my-6;
+  }
+
+  .markdown-content th {
+    @apply bg-gray-100 border border-gray-300 px-4 py-2 text-left;
+  }
+
+  .markdown-content td {
+    @apply border border-gray-300 px-4 py-2;
+  }
+
+  .markdown-content hr {
+    @apply my-8 border-t border-gray-200;
+  }
+
+  /* 代码高亮样式 */
+  .token.comment,
+  .token.prolog,
+  .token.doctype,
+  .token.cdata {
+    @apply text-gray-400;
+  }
+
+  .token.punctuation {
+    @apply text-gray-300;
+  }
+
+  .token.property,
+  .token.tag,
+  .token.boolean,
+  .token.number,
+  .token.constant,
+  .token.symbol,
+  .token.deleted {
+    @apply text-yellow-300;
+  }
+
+  .token.selector,
+  .token.attr-name,
+  .token.string,
+  .token.char,
+  .token.builtin,
+  .token.inserted {
+    @apply text-green-300;
+  }
+
+  .token.operator,
+  .token.entity,
+  .token.url,
+  .language-css .token.string,
+  .style .token.string {
+    @apply text-yellow-100;
+  }
+
+  .token.atrule,
+  .token.attr-value,
+  .token.keyword {
+    @apply text-blue-300;
+  }
+
+  .token.function,
+  .token.class-name {
+    @apply text-pink-300;
+  }
+
+  .token.regex,
+  .token.important,
+  .token.variable {
+    @apply text-yellow-200;
+  }
+
+  /* 目录样式 */
+  .table-of-contents {
+    @apply bg-white rounded-lg shadow-sm p-4 mb-6 border border-gray-100;
+  }
+
+  .table-of-contents h2 {
+    @apply text-xl font-bold mb-3 text-gray-800;
+  }
+
+  .table-of-contents ul {
+    @apply list-none pl-0;
+  }
+
+  .table-of-contents li {
+    @apply mb-2;
+  }
+
+  .table-of-contents a {
+    @apply text-primary hover:text-primary-hover no-underline;
+  }
+
+  .table-of-contents .toc-level-2 {
+    @apply pl-0;
+  }
+
+  .table-of-contents .toc-level-3 {
+    @apply pl-4;
+  }
+
+  .table-of-contents .toc-level-4 {
+    @apply pl-8;
+  }
+
+
+  /* 分类和标签样式 */
+  .category-tag,
+  .tag {
+    @apply inline-block px-2 py-1 bg-opacity-10 bg-primary text-primary rounded-md text-sm mr-2 mb-2;
+  }
+
+  .category-tag:hover,
+  .tag:hover {
+    @apply bg-opacity-20;
+  }
+
+  /* 侧边目录导航 */
+.toc-sidebar {
+  @apply fixed right-6 top-20 w-full max-h-[calc(100vh-6rem)] overflow-y-auto hidden lg:block transition-opacity duration-300;
+}
+
+
+.toc-sidebar.visible {
+  @apply opacity-100;
+}
+
+.toc-sidebar.dimmed {
+  opacity: 0.2;
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.toc-sidebar-inner {
+  @apply bg-gray-50/90 backdrop-blur-sm rounded-xl shadow-md p-5 border border-gray-200/50 relative;
+}
+
+.toc-sidebar h3 {
+  @apply text-base font-semibold mb-4 text-gray-900;
+}
+
+.toc-sidebar ul {
+  @apply list-none pl-0 text-sm;
+}
+
+.toc-sidebar li {
+  @apply mb-2;
+}
+
+.toc-sidebar a {
+  @apply text-gray-700 hover:text-primary hover:bg-gray-100 no-underline block py-1.5 px-2 rounded border-l-2 border-transparent transition-colors;
+}
+
+.toc-sidebar .toc-level-2 {
+  @apply pl-0;
+}
+
+.toc-sidebar .toc-level-3 {
+  @apply pl-4;
+}
+
+.toc-sidebar .toc-level-4 {
+  @apply pl-8;
+}
+
+/* 侧边栏垂直进度条 */
+.toc-progress-bar {
+  @apply absolute top-0 left-0 w-1 bg-primary/80 z-10 transition-all duration-300;
+}
+
+.image-wrapper {
+  max-width: 100%;
+  margin: 1rem 0;
+}
+
+.image-wrapper img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem; /* 可选：圆角效果 */
+}
+
+
+
+/* 顶部目录概览样式 - 竖直展开设计 */
+.top-toc {
+  margin-bottom: 2rem;
+  border-radius: 0.5rem;
+  background-color: #f8fafc;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.top-toc.collapsed {
+  max-height: 3.5rem;
+}
+
+.top-toc.expanded {
+  max-height: 50vh;
+}
+
+.top-toc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.top-toc-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.expand-button {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s;
+}
+
+.expand-button:hover {
+  background-color: #e2e8f0;
+}
+
+.top-toc-content {
+  padding: 1rem 1.5rem;
+  max-height: calc(50vh - 3.5rem);
+  overflow-y: auto;
+}
+
+/* 竖直展开的目录样式 */
+.top-toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.top-toc-item {
+  margin-bottom: 0.5rem;
+}
+
+.top-toc-item a {
+  display: block;
+  padding: 0.4rem 0;
+  color: #334155;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.top-toc-item a:hover {
+  color: #2563eb;
+}
+
+.top-toc-item.active a {
+  color: #2563eb;
+  font-weight: 500;
+}
+
+.top-toc-item.depth-1 {
+  font-weight: 600;
+}
+
+.top-toc-item.depth-2 {
+  padding-left: 1.25rem;
+}
+
+.top-toc-item.depth-3 {
+  padding-left: 2.5rem;
+  font-size: 0.9375rem;
+}
+
+.top-toc-item.depth-4 {
+  padding-left: 3.75rem;
+  font-size: 0.875rem;
+}
+
+/* 侧边栏目录样式 */
+.markdown-container {
+  display: flex;
+  gap: 2rem;
+}
+
+.markdown-content {
+  flex: 1;
+  max-width: calc(100% - 14rem);
+}
+
+.toc-sidebar {
+  position: sticky;
+  top: 5rem;
+  height: calc(100vh - 10rem);
+  overflow-y: auto;
+  padding-right: 1rem;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.toc-sidebar-inner {
+  padding-left: 1rem;
+  border-left: 2px solid #e2e8f0;
+  position: relative; /* 为进度指示器提供定位上下文 */
+}
+
+.toc-sidebar h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #334155;
+}
+
+.toc-sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.toc-sidebar li {
+  margin-bottom: 0.5rem;
+  position: relative;
+}
+
+.toc-sidebar li a {
+  display: block;
+  color: #64748b;
+  text-decoration: none;
+  font-size: 0.875rem;
+  padding: 0.25rem 0;
+  transition: color 0.2s;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toc-sidebar li a:hover {
+  color: #0f172a;
+}
+
+.toc-sidebar li.active-heading a {
+  color: #2563eb;
+  font-weight: 500;
+}
+
+.toc-level-1 {
+  font-weight: 500;
+}
+
+.toc-level-2 {
+  padding-left: 0.75rem;
+}
+
+.toc-level-3 {
+  padding-left: 1.5rem;
+}
+
+.toc-level-4 {
+  padding-left: 2.25rem;
+  font-size: 0.8125rem;
+}
+
+/* 进度指示器 - 改为绝对定位，与活动项目对齐 */
+.toc-progress-indicator {
+  position: absolute;
+  left: 0;
+  width: 2px;
+  background-color: #2563eb;
+  transition: top 0.3s ease, height 0.3s ease;
+}
+
+/* 小屏幕样式调整 */
+@media (max-width: 1024px) {
+  .markdown-container {
+    flex-direction: column;
+  }
+  
+  .markdown-content {
+    max-width: 100%;
+  }
+  
+  .toc-sidebar {
+    position: relative;
+    top: 0;
+    height: auto;
+    max-height: 50vh;
+    width: 100% !important;
+    margin-bottom: 2rem;
+  }
+}
+
+}
+
+
+
+
+================================================
+File: app/layout.jsx
+================================================
+import { Inter } from "next/font/google";
+import "./globals.css";
+import Header from "../components/Header.jsx";
+import Footer from "../components/Footer.jsx";
+
+const inter = Inter({ subsets: ["latin"] });
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="zh-CN">
+      <body className={`${inter.className} min-h-screen flex flex-col`}>
+        <Header />
+        <main className="flex-grow container mx-auto px-4 py-8 mt-16">{children}</main>
+        <Footer />
+      </body>
+    </html>
+  );
+}
+
+
+================================================
+File: app/page.jsx
+================================================
+import Link from "next/link";
+import { Calendar, Clock, Tag } from "lucide-react";
+import { getMarkdownFiles, getPostMetadata } from "../lib/markdown";
+
+export async function generateMetadata() {
+  return {
+    title: "Garhlz's blog",
+  };
+}
+
+export default async function Page() {
+  let posts = [];
+  try {
+    const filenames = await getMarkdownFiles();
+    posts = await Promise.all(
+      filenames.map(async (filename) => {
+        try {
+          return await getPostMetadata(filename);
+        } catch (error) {
+          console.error(`Error parsing ${filename}:`, error);
+          return null;
+        }
+      })
+    );
+    posts = posts.filter((post) => post !== null);
+    posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+  } catch (error) {
+    console.error("Error loading posts:", error);
+  }
+
+  return (
+    <div className="space-y-8 mt-8">
+      
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold text-gray-900 mb-4">文章</h1>
+        <p className="text-xl text-gray-600 max-w-2xl mx-auto">分享想法、经验和知识</p>
+      </div>
+
+      {posts.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-lg shadow-sm">
+          <p className="text-gray-600">暂无文章</p>
+          <p className="text-gray-500 mt-2">请在 content 目录中添加 Markdown 文件</p>
+        </div>
+      ) : (
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          {posts.map((post) => (
+            <article
+              key={post.slug}
+              className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+            >
+              <div className="p-6">
+                <Link href={`/post/${post.slug}`} className="block">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-primary">
+                    {post.title}
+                  </h2>
+                </Link>
+                <div className="flex items-center text-sm text-gray-500 mb-3 space-x-4">
+                  <div className="flex items-center">
+                    <Calendar className="h-4 w-4 mr-1" />
+                    <span>{post.date}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Clock className="h-4 w-4 mr-1" />
+                    <span>{post.readingTime} 分钟阅读</span>
+                  </div>
+                </div>
+                {post.categories && post.categories.length > 0 && (
+                  <div className="flex flex-wrap items-center mb-3">
+                    <Tag className="h-4 w-4 mr-1 text-gray-500" />
+                    <div className="flex flex-wrap gap-2">
+                      {post.categories.map((category) => (
+                        <Link
+                          key={category}
+                          href={`/categories/${category}`}
+                          className="category-tag inline-block bg-gray-100 text-gray-700 px-2 py-1 rounded text-sm hover:bg-gray-200"
+                        >
+                          {category}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <p className="text-gray-600 line-clamp-3">{post.excerpt}</p>
+                <Link href={`/post/${post.slug}`} className="mt-4 text-primary font-medium inline-block">
+                  阅读更多 →
+                </Link>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+================================================
+File: app/about/page.jsx
+================================================
+import MarkdownRenderer from "@/components/MarkdownRenderer";
+import { getPostData } from "@/lib/markdown";
+
+export async function generateMetadata() {
+  return {
+    title: "About - Garhlz's blog",
+  };
+}
+
+export default async function About() {
+  let postData;
+
+  try {
+    postData = await getPostData("about");
+  } catch (error) {
+    console.error("Error loading about page:", error);
+    postData = {
+      content: `
+# About Me
+
+This is a default About page. It seems the custom about.md file could not be loaded. Please check the content directory or update this page.
+
+- **Name**: Garhlz
+- **Bio**: 不好意思还没写
+      `,
+    };
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto mt-8 px-4">
+      <h1 className="text-3xl font-bold text-gray-900 mb-6">About</h1>
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <MarkdownRenderer content={postData.content} />
+      </div>
+    </div>
+  );
+}
+
+
+================================================
+File: app/archives/page.jsx
+================================================
+import Link from "next/link";
+import { Calendar, Archive } from "lucide-react";
+import { getMarkdownFiles, getPostMetadata } from "../../lib/markdown";
+
+async function getArchives() {
+  try {
+    const filenames = await getMarkdownFiles();
+    const posts = await Promise.all(
+      filenames.map(async (filename) => {
+        try {
+          return await getPostMetadata(filename);
+        } catch (error) {
+          console.error(`Error parsing ${filename}:`, error);
+          return null;
+        }
+      })
+    );
+
+    const validPosts = posts.filter((post) => post !== null);
+    validPosts.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    const archives = {};
+    validPosts.forEach((post) => {
+      const [year, month] = post.date.split("-");
+      if (!archives[year]) archives[year] = {};
+      if (!archives[year][month]) archives[year][month] = [];
+      archives[year][month].push(post);
+    });
+
+    return Object.keys(archives)
+      .sort((a, b) => b - a)
+      .map((year) => ({
+        year,
+        months: Object.keys(archives[year])
+          .sort((a, b) => b - a)
+          .map((month) => ({
+            month,
+            posts: archives[year][month],
+          })),
+      }));
+  } catch (error) {
+    console.error("Error fetching archives:", error);
+    return [];
+  }
+}
+
+export async function generateMetadata() {
+  return {
+    title: "Archives - Garhlz's blog",
+  };
+}
+
+export default async function ArchivesPage() {
+  const archives = await getArchives();
+
+  const totalPosts = archives.reduce(
+    (total, yearData) =>
+      total + yearData.months.reduce((yearTotal, monthData) => yearTotal + monthData.posts.length, 0),
+    0
+  );
+
+  return (
+    <div className="max-w-3xl mx-auto mt-8">
+      <div className="flex items-center mb-8">
+        <Archive className="h-6 w-6 mr-2 text-[rgb(var(--primary-color))]" />
+        <h1 className="text-3xl font-bold text-gray-900">文章归档</h1>
+        <span className="ml-2 text-gray-500">共 {totalPosts} 篇文章</span>
+      </div>
+
+      {archives.length === 0 ? (
+        <div className="bg-white rounded-lg shadow-sm p-6 text-center">
+          <p className="text-gray-600">暂无文章</p>
+        </div>
+      ) : (
+        <div className="space-y-8">
+          {archives.map((yearData) => (
+            <div key={yearData.year} className="bg-white rounded-lg shadow-sm p-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">{yearData.year}年</h2>
+              <div className="space-y-6">
+                {yearData.months.map((monthData) => (
+                  <div key={`${yearData.year}-${monthData.month}`}>
+                    <h3 className="text-xl font-semibold text-gray-800 mb-3">{monthData.month}月</h3>
+                    <ul className="space-y-2">
+                      {monthData.posts.map((post) => (
+                        <li key={post.slug} className="flex items-baseline">
+                          <span className="text-gray-500 text-sm w-24 flex-shrink-0">
+                            <Calendar className="h-3 w-3 inline-block mr-1" />
+                            {post.date.split("-")[2]}日
+                          </span>
+                          <Link
+                            href={`/post/${post.slug}`}
+                            className="text-[rgb(var(--primary-color))] hover:text-[rgb(var(--primary-hover))] hover:underline"
+                          >
+                            {post.title}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+================================================
+File: app/categories/page.jsx
+================================================
+import Link from "next/link";
+import { Tag } from "lucide-react";
+import { getMarkdownFiles, getPostMetadata } from "../../lib/markdown";
+
+async function getCategoriesWithPosts() {
+  try {
+    const filenames = await getMarkdownFiles();
+    const posts = await Promise.all(
+      filenames.map(async (filename) => {
+        try {
+          return await getPostMetadata(filename);
+        } catch (error) {
+          console.error(`Error parsing ${filename}:`, error);
+          return null;
+        }
+      })
+    );
+
+    const validPosts = posts.filter((post) => post !== null);
+    const categoriesMap = {};
+
+    validPosts.forEach((post) => {
+      post.categories.forEach((category) => {
+        if (!categoriesMap[category]) {
+          categoriesMap[category] = [];
+        }
+        categoriesMap[category].push({
+          slug: post.slug,
+          title: post.title,
+          date: post.date,
+        });
+      });
+    });
+
+    return Object.keys(categoriesMap)
+      .map((category) => ({
+        name: category,
+        count: categoriesMap[category].length,
+        posts: categoriesMap[category].sort((a, b) => new Date(b.date) - new Date(a.date)),
+      }))
+      .sort((a, b) => b.count - a.count);
+  } catch (error) {
+    console.error("Error fetching categories:", error);
+    return [];
+  }
+}
+
+export async function generateMetadata() {
+  return {
+    title: "Categories - Garhlz's blog",
+  };
+}
+
+export default async function CategoriesPage() {
+  const categories = await getCategoriesWithPosts();
+
+  return (
+    <div className="max-w-4xl mx-auto mt-8">
+      <h1 className="text-3xl font-bold text-gray-900 mb-6">文章分类</h1>
+
+      {categories.length === 0 ? (
+        <div className="bg-white rounded-lg shadow-sm p-6 text-center">
+          <p className="text-gray-600">暂无分类</p>
+          <p className="text-gray-500 mt-2">请在文章的 frontmatter 中添加 categories 字段</p>
+        </div>
+      ) : (
+        <div className="space-y-8">
+          {categories.map((category) => (
+            <div key={category.name} className="bg-white rounded-lg shadow-sm p-6">
+              <div className="flex items-center mb-4">
+                <Tag className="h-5 w-5 mr-2 text-[rgb(var(--primary-color))]" />
+                <h2 className="text-2xl font-semibold text-gray-900">{category.name}</h2>
+                <span className="ml-2 text-gray-500">({category.count})</span>
+              </div>
+              <ul className="space-y-2 pl-7">
+                {category.posts.map((post) => (
+                  <li key={post.slug} className="flex items-baseline">
+                    <span className="text-gray-500 text-sm w-24 flex-shrink-0">{post.date}</span>
+                    <Link
+                      href={`/post/${post.slug}`}
+                      className="text-[rgb(var(--primary-color))] hover:text-[rgb(var(--primary-hover))] hover:underline"
+                    >
+                      {post.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+================================================
+File: app/categories/[slug]/page.jsx
+================================================
+import Link from "next/link";
+import { Calendar, Clock, ArrowLeft, Tag } from "lucide-react";
+import { getMarkdownFiles, getPostMetadata } from "../../../lib/markdown";
+
+async function getPostsByCategory(category) {
+  try {
+    const filenames = await getMarkdownFiles();
+    const posts = await Promise.all(
+      filenames.map(async (filename) => {
+        try {
+          return await getPostMetadata(filename);
+        } catch (error) {
+          console.error(`Error parsing ${filename}:`, error);
+          return null;
+        }
+      })
+    );
+
+    const validPosts = posts.filter((post) => post !== null && post.categories.includes(category));
+    return validPosts.sort((a, b) => new Date(b.date) - new Date(a.date));
+  } catch (error) {
+    console.error(`Error fetching posts for category ${category}:`, error);
+    return [];
+  }
+}
+
+export default async function CategoryPage({ params }) {
+  const { slug } = params;
+  const decodedCategory = decodeURIComponent(slug);
+  const posts = await getPostsByCategory(decodedCategory);
+
+  return (
+    <div className="max-w-4xl mx-auto mt-8">
+      <Link
+        href="/categories"
+        className="inline-flex items-center text-gray-600 hover:text-[rgb(var(--primary-color))] mb-6"
+      >
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        返回所有分类
+      </Link>
+
+      <div className="flex items-center mb-8">
+        <Tag className="h-6 w-6 mr-2 text-[rgb(var(--primary-color))]" />
+        <h1 className="text-3xl font-bold text-gray-900">分类: {decodedCategory}</h1>
+        <span className="ml-2 text-gray-500">({posts.length})</span>
+      </div>
+
+      {posts.length === 0 ? (
+        <div className="bg-white rounded-lg shadow-sm p-6 text-center">
+          <p className="text-gray-600">该分类下暂无文章</p>
+        </div>
+      ) : (
+        <div className="grid gap-8 md:grid-cols-2">
+          {posts.map((post) => (
+            <article
+              key={post.slug}
+              className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+            >
+              <Link href={`/post/${post.slug}`} className="block h-full">
+                <div className="p-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-2 line-clamp-2">{post.title}</h2>
+                  <div className="flex items-center text-sm text-gray-500 mb-3 space-x-4">
+                    <div className="flex items-center">
+                      <Calendar className="h-4 w-4 mr-1" />
+                      <span>{post.date}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Clock className="h-4 w-4 mr-1" />
+                      <span>{post.readingTime} 分钟阅读</span>
+                    </div>
+                  </div>
+                  <p className="text-gray-600 line-clamp-3">{post.excerpt}</p>
+                  <div className="mt-4 text-[rgb(var(--primary-color))] font-medium">阅读更多 →</div>
+                </div>
+              </Link>
+            </article>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+================================================
+File: app/fonts/GeistMonoVF.woff
+================================================
+[Non-text file]
+
+
+================================================
+File: app/fonts/GeistVF.woff
+================================================
+[Non-text file]
+
+
+================================================
+File: app/post/[slug]/page.jsx
+================================================
+import Link from "next/link";
+import { ArrowLeft, Calendar, Clock, Tag } from "lucide-react";
+import MarkdownRenderer from "@/components/MarkdownRenderer";
+import { getPostData } from "@/lib/markdown";
+
+export async function generateMetadata({ params }) {
+  const { slug } = params;
+  let postData;
+
+  try {
+    postData = await getPostData(slug);
+    return {
+      title: `${postData.title} - Garhlz's blog`,
+    };
+  } catch (error) {
+    return {
+      title: "Post Not Found - Garhlz's blog",
+    };
+  }
+}
+
+export default async function Post({ params }) {
+  const { slug } = params;
+  let postData;
+
+  try {
+    postData = await getPostData(slug);
+  } catch (error) {
+    return (
+      <div className="max-w-3xl mx-auto py-12 px-4">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <h1 className="text-2xl font-bold text-red-700 mb-2">文章未找到</h1>
+          <p className="text-red-600 mb-4">{error.message}</p>
+          <Link href="/" className="inline-flex items-center text-primary hover:text-primary-hover">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            返回首页
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-5xl mx-auto mt-8 flex flex-col lg:flex-row gap-8">
+      <article className="flex-1 pr-0 lg:pr-6">
+        <Link href="/" className="inline-flex items-center text-gray-600 hover:text-primary mb-6">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          返回文章列表
+        </Link>
+
+        <header className="mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{postData.title}</h1>
+          <div className="flex flex-wrap items-center text-sm text-gray-500 space-x-4 mb-3">
+            <div className="flex items-center">
+              <Calendar className="h-4 w-4 mr-1" />
+              <span>{postData.date}</span>
+            </div>
+            <div className="flex items-center">
+              <Clock className="h-4 w-4 mr-1" />
+              <span>{postData.readingTime} 分钟阅读</span>
+            </div>
+          </div>
+          {postData.categories && postData.categories.length > 0 && (
+            <div className="flex flex-wrap items-center mb-3">
+              <Tag className="h-4 w-4 mr-1 text-gray-500" />
+              <div className="flex flex-wrap">
+                {postData.categories.map((category) => (
+                  <Link key={category} href={`/categories/${category}`} className="category-tag">
+                    {category}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+        </header>
+
+        <div className="bg-white rounded-lg shadow-sm p-6 md:p-8 mb-8">
+          <MarkdownRenderer content={postData.content} />
+        </div>
+      </article>
+    </div>
+  );
+}
+
+
+================================================
+File: components/Footer.jsx
+================================================
+import Link from "next/link"
+
+export default function Footer() {
+  return (
+    <footer className="bg-header-bg border-t border-gray-200 py-8">
+      <div className="container mx-auto px-4">
+        <div className="flex flex-col md:flex-row justify-between items-center">
+          <div className="mb-4 md:mb-0">
+            <p className="text-gray-600">漏 {new Date().getFullYear()} Garhlz All Rights Reserved.</p>
+          </div>
+          <div className="flex space-x-6">
+            <Link href="/" className="text-gray-600 hover:text-primary transition-colors">
+              棣栭〉
+            </Link>
+            <Link href="/categories" className="text-gray-600 hover:text-primary transition-colors">
+              鍒嗙被
+            </Link>
+            <Link href="/archives" className="text-gray-600 hover:text-primary transition-colors">
+              褰掓。
+            </Link>
+            <Link href="/about" className="text-gray-600 hover:text-primary transition-colors">
+              鍏充簬
+            </Link>
+          </div>
+        </div>
+      </div>
+    </footer>
+  )
+}
+
+
+
+
+================================================
+File: components/Header.jsx
+================================================
+"use client"
+
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { Home, User, Archive, Tag, Github, Twitter } from "lucide-react"
+
+export default function Header() {
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10)
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
+
+  return (
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        scrolled ? "bg-header-bg shadow-md py-2" : "bg-header-bg py-4"
+      }`}
+    >
+      <div className="container mx-auto px-4">
+        <div className="flex justify-between items-center">
+          <Link href="/" className="text-xl font-bold text-gray-800 hover:text-primary transition-colors">
+            Garhlz's Blog
+          </Link>
+          
+          <div className="flex items-center">
+            <nav className="flex items-center space-x-6 mr-6">
+              <Link href="/" className="flex items-center space-x-1 text-gray-600 hover:text-primary transition-colors">
+                <Home className="h-4 w-4" />
+                <span>棣栭〉</span>
+              </Link>
+              <Link
+                href="/categories"
+                className="flex items-center space-x-1 text-gray-600 hover:text-primary transition-colors"
+              >
+                <Tag className="h-4 w-4" />
+                <span>鍒嗙被</span>
+              </Link>
+              <Link
+                href="/archives"
+                className="flex items-center space-x-1 text-gray-600 hover:text-primary transition-colors"
+              >
+                <Archive className="h-4 w-4" />
+                <span>褰掓。</span>
+              </Link>
+              <Link
+                href="/about"
+                className="flex items-center space-x-1 text-gray-600 hover:text-primary transition-colors"
+              >
+                <User className="h-4 w-4" />
+                <span>鍏充簬</span>
+              </Link>
+            </nav>
+
+            <div className="flex items-center space-x-4">
+              <a
+                href="https://github.com/garhlz"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-600 hover:text-primary transition-colors"
+              >
+                <Github className="h-5 w-5" />
+              </a>
+              <a
+                href="https://twitter.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-600 hover:text-primary transition-colors"
+              >
+                <Twitter className="h-5 w-5" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+  )
+}
+
+
+
+
+================================================
+File: components/MarkdownRenderer.jsx
+================================================
+"use client";
+
+import { useEffect, useState, useRef } from "react";
+import { unified } from "unified";
+import remarkParse from "remark-parse";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import remarkRehype from "remark-rehype";
+import rehypeRaw from "rehype-raw";
+import rehypePrism from "rehype-prism-plus";
+import rehypeKatex from "rehype-katex";
+import rehypeStringify from "rehype-stringify";
+import { visit } from "unist-util-visit";
+import "katex/dist/katex.min.css";
+
+function extractHeadings() {
+  return (tree, file) => {
+    const headings = [];
+    const idCounts = new Map();
+    visit(tree, "heading", (node) => {
+      const text = node.children
+        .filter((n) => n.type === "text")
+        .map((n) => n.value)
+        .join("");
+      let id = text
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^\w-]+/g, "");
+      if (idCounts.has(id)) {
+        const count = idCounts.get(id) + 1;
+        idCounts.set(id, count);
+        id = `${id}-${count}`;
+      } else {
+        idCounts.set(id, 0);
+      }
+      node.data = node.data || {};
+      node.data.hProperties = node.data.hProperties || {};
+      node.data.hProperties.id = id;
+      headings.push({ depth: node.depth, text, id });
+    });
+    file.data.headings = headings;
+  };
+}
+
+const MarkdownRenderer = ({ content }) => {
+  const [htmlContent, setHtmlContent] = useState("");
+  const [headings, setHeadings] = useState([]);
+  const [activeHeadingIndex, setActiveHeadingIndex] = useState(0);
+  const [isTopTocExpanded, setIsTopTocExpanded] = useState(false);
+  const sidebarRef = useRef(null);
+  const sidebarItemsRef = useRef([]);
+  const activeItemRef = useRef(null);
+  const progressIndicatorRef = useRef(null);
+
+  // 初始化引用数组
+  useEffect(() => {
+    sidebarItemsRef.current = sidebarItemsRef.current.slice(0, headings.length);
+  }, [headings]);
+
+  useEffect(() => {
+    const processContent = async () => {
+      try {
+        const vfile = await unified()
+          .use(remarkParse)
+          .use(extractHeadings)
+          .use(remarkGfm)
+          .use(remarkMath)
+          .use(remarkRehype, { allowDangerousHtml: true })
+          .use(rehypeRaw)
+          .use(rehypePrism, { showLineNumbers: true, ignoreMissing: true })
+          .use(rehypeKatex)
+          .use(rehypeStringify)
+          .process(content);
+        setHtmlContent(String(vfile));
+        setHeadings(vfile.data.headings || []);
+      } catch (error) {
+        console.error("Error rendering Markdown:", error);
+        setHtmlContent("<p>渲染文章时出错，请检查 Markdown 格式。</p>");
+      }
+    };
+    processContent();
+  }, [content]);
+
+  useEffect(() => {
+    const updateActiveHeading = () => {
+      const scrollTop = window.scrollY;
+      const headerHeight = 64; // 假设顶部导航栏高度
+
+      const headingElements = headings
+        .map((h) => document.getElementById(h.id))
+        .filter(Boolean);
+
+      if (headingElements.length === 0) {
+        setActiveHeadingIndex(0);
+        return;
+      }
+
+      let newActiveIndex = 0;
+      for (let i = 0; i < headingElements.length; i++) {
+        const rect = headingElements[i].getBoundingClientRect();
+        if (rect.top + window.scrollY - headerHeight > scrollTop) {
+          if (i > 0) newActiveIndex = i - 1;
+          break;
+        }
+        newActiveIndex = i;
+      }
+
+      setActiveHeadingIndex(newActiveIndex);
+    };
+
+    window.addEventListener("scroll", updateActiveHeading);
+    updateActiveHeading();
+
+    return () => window.removeEventListener("scroll", updateActiveHeading);
+  }, [htmlContent, headings]);
+
+  // 在活动标题变化时更新进度条位置
+  useEffect(() => {
+    if (activeItemRef.current && progressIndicatorRef.current && sidebarRef.current) {
+      const sidebar = sidebarRef.current;
+      const activeItem = activeItemRef.current;
+      const progressIndicator = progressIndicatorRef.current;
+      
+      // 计算活动项相对于侧边栏的位置
+      const activeItemTop = activeItem.offsetTop;
+      const activeItemHeight = activeItem.offsetHeight;
+      
+      // 更新进度指示器位置，使其对齐到活动项目
+      progressIndicator.style.top = `${activeItemTop}px`;
+      progressIndicator.style.height = `${activeItemHeight}px`;
+      
+      // 自动滚动侧边栏，使活动项目可见
+      const sidebarHeight = sidebar.clientHeight;
+      const activeItemBottom = activeItemTop + activeItemHeight;
+      
+      if (activeItemTop < sidebar.scrollTop) {
+        sidebar.scrollTop = activeItemTop - 20; // 添加一些上部空间
+      } else if (activeItemBottom > sidebar.scrollTop + sidebarHeight) {
+        sidebar.scrollTop = activeItemBottom - sidebarHeight + 20; // 添加一些下部空间
+      }
+    }
+  }, [activeHeadingIndex]);
+
+  const renderTopToc = () => {
+    if (headings.length === 0) return null;
+    
+    return (
+      <div className={`top-toc ${isTopTocExpanded ? 'expanded' : 'collapsed'}`}>
+        <div className="top-toc-header" onClick={() => setIsTopTocExpanded(!isTopTocExpanded)}>
+          <h3>目录概览</h3>
+          <button className="expand-button">
+            {isTopTocExpanded ? '收起' : '展开'}
+          </button>
+        </div>
+        
+        {isTopTocExpanded && (
+          <div className="top-toc-content">
+            <ul className="top-toc-list">
+              {headings.map((heading, index) => (
+                <li 
+                  key={heading.id}
+                  className={`top-toc-item depth-${heading.depth} ${index === activeHeadingIndex ? 'active' : ''}`}
+                >
+                  <a href={`#${heading.id}`}>{heading.text}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderSidebar = () => {
+    if (headings.length === 0) return null;
+
+    return (
+      <div className="toc-sidebar lg:w-48" ref={sidebarRef}>
+        <div className="toc-sidebar-inner">
+          <h3>目录</h3>
+          <ul>
+            {headings.map((heading, index) => (
+              <li
+                key={heading.id}
+                ref={(el) => {
+                  sidebarItemsRef.current[index] = el;
+                  if (index === activeHeadingIndex) {
+                    activeItemRef.current = el;
+                  }
+                }}
+                className={`toc-level-${Math.min(heading.depth, 4)} ${
+                  index === activeHeadingIndex ? "active-heading" : ""
+                }`}
+              >
+                <a href={`#${heading.id}`}>{heading.text}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div
+          className="toc-progress-indicator"
+          ref={progressIndicatorRef}
+        />
+      </div>
+    );
+  };
+
+  return (
+    <>
+      {renderTopToc()}
+      <div className="markdown-container">
+        {htmlContent && <div className="markdown-content" dangerouslySetInnerHTML={{ __html: htmlContent }} />}
+        {renderSidebar()}
+      </div>
+    </>
+  );
+};
+
+export default MarkdownRenderer;
+
+
+================================================
+File: content/blog-features-demo.md
+================================================
+---
+title: 博客功能演示
+date: 2023-12-15
+categories: [开始]
+excerpt: 这篇文章演示了博客的各种功能，包括 Markdown 渲染、代码高亮、目录和分类功能。
+---
+
+# 博客功能演示
+
+这篇文章将演示博客的各种功能，包括 Markdown 渲染、代码高亮、目录和分类功能。
+
+## Markdown 基础语法
+
+Markdown 是一种轻量级标记语言，它允许人们使用易读易写的纯文本格式编写文档，然后转换成有效的 HTML 文档。
+
+### 文本格式化
+
+你可以使用 Markdown 来格式化文本：
+
+- **粗体文本** 使用 `**粗体文本**`
+- *斜体文本* 使用 `*斜体文本*`
+- ~~删除线~~ 使用 `~~删除线~~`
+
+### 列表
+
+无序列表：
+
+- 项目 1
+- 项目 2
+  - 子项目 2.1
+  - 子项目 2.2
+- 项目 3
+
+有序列表：
+
+1. 第一步
+2. 第二步
+3. 第三步
+
+### 引用
+
+> 这是一个引用。引用可以用来突出显示重要信息或引用他人的话。
+>
+> 引用可以包含多个段落。
+
+### 链接和图片
+
+这是一个[链接示例](https://example.com)，语法为 `[链接文本](URL)`。
+
+图片语法类似，但前面加一个感叹号：`![替代文本](图片URL)`
+
+## 代码高亮演示
+
+博客支持多种编程语言的代码高亮。
+
+### JavaScript 示例
+
+```javascript
+function greeting(name) {
+  return `Hello, ${name}!`;
+}
+
+// 调用函数
+const message = greeting('World');
+console.log(message);  // 输出: Hello, World!
+
+
+
+
+================================================
+File: content/blog-usage-guide.md
+================================================
+---
+title: 博客使用指南
+date: 2023-12-15
+categories: [开始]
+tags: Markdown, Next.js, 博客
+---
+
+# 博客使用指南
+
+欢迎使用这个基于Next.js和Tailwind CSS构建的博客系统！本文将介绍如何使用博客的各项功能，特别是分类和归档系统。
+
+## 文章格式
+
+每篇文章都是一个Markdown文件，存放在`content`目录下。文件名将作为文章的URL slug。例如，`blog-usage-guide.md`的访问地址为`/post/blog-usage-guide`。
+
+### Frontmatter
+
+每篇文章的开头可以包含frontmatter，用三个短横线`---`包围。frontmatter中可以定义以下属性：
+
+
+
+
+================================================
+File: content/刷题日记25-03-05.md
+================================================
+---
+title: 刷题日记25-03-05
+date: 2025-03-05
+categories: [题解,acm]
+excerpt: 博主2025-03-05的刷题日记
+---
+
+# 刷题日记25-03-05
+
+# acm 和 cf上分问题
+
+- 保持思考，不要盲目刷题，脱离单调重复、没有提升的状态，不要把抄题解当成学习，区别很大
+- 了解和评估当前状态
+- 需要学习新算法，还有很多主题
+- 接触更多平台，不一定局限于cf
+
+
+
+# 170edu
+
+## B
+
+需要推公式，发现要求的就是2的幂次
+
+实际上就是二项式展开
+
+
+
+## C
+
+简单，排序去重，开桶计数，双指针求连续区间最值
+
+
+
+## D
+
+题意：你扮演一个角色，初始“力量”（Strength）和“智力”（Intelligence）属性为 0。游戏中有n个记录，按顺序发生：
+
+- 如果记录 ri=0，获得 1 个属性点，可选择加到力量或智力（总点数M）。
+- 如果 ri>0，进行智力检查，要求智力 ≥ri才能通过。
+- 如果 ri<0，进行力量检查，要求力量 ≥−ri 才能通过。
+   目标是合理分配 M 个属性点，最大化通过的检查次数。
+
+实际上是差分优化dp，定义 dp(i,x)表示前 i个记录，智力值为x时的最大通过次数（因为前i个数字的点数已知，所以可以知道力量点数）
+
+分成三类进行状态转移
+
+````cpp
+else if(a[i] == 0) // 这是ai=0的时候，需要区间修改dp数组，也就是用差分数组优化的
+{
+    now++; // 表示当前所有可加的点数
+    for (int j = 0; j <= now; j++)
+    {
+        if (j) dif[j] += dif[j - 1];
+        dp[j] += dif[j];
+    } // 相当于懒惰处理/写回，只有需要修改的时候再把差分数组作前缀和之后加回去
+    for (int j = now; j >= 1; j--)
+    {
+        dp[j] = max(dp[j], dp[j - 1]);
+    } // 因为滚动掉了第一维表示前i个数字的
+    // 所以看起来是原地继承，实际上是在决策加到哪个数值上
+    // 而且注意要反向遍历，恰好不影响
+    for (int i = 0; i <= now; i++)
+        dif[i] = 0;
+    // 不可以clear
+}
+````
+
+
+
+# 1007div2
+
+## B
+
+构造题。题意：给定一个正整数 n，要求构造一个长度为 n 的完美排列 p，其中“完美”定义为：对于每个 i（1≤i≤n），前 ii个元素之和 p1+p2+⋯+pi不是完全平方数。如果无法构造，则输出 −1。
+
+如果 $n(n+1)/2 $是完全平方数，则无论如何排列，i=n时和都是完全平方数，无法满足完美条件。
+
+**调整策略**：
+
+- 计算前缀和 sum[i]=a[1]+⋯+a[i]
+- 如果 sum[i]是完全平方数，交换 a[i]和 a[i+1]
+
+- 交换后，sum[i]变为 sum[i−1]+a[i+1]，打破了完全平方性质
+
+
+
+## C
+
+树上序列，也是构造题
+
+构造方法是把en结点当树根，求出所有点深度，从深到浅输出排列即可
+
+当前所在的具体节点位置无需考虑，只需要管可能的倾向即可
+
+
+
+## D
+
+需要注意到，如果m为偶数，递归之后相邻两个数字的异或和=0，可以抵消，利用这点递归求解
+
+预处理出异或前缀和，直接查询即可
+
+需要熟悉异或性质，也算是思维题
+
+```cpp
+function<int(int)> dfs = [&](int x)
+{
+    if (x <= n) return get_xor(a, x, x); // 也就是本身
+    if (x / 2 <= n) return get_xor(a, 1, x / 2);
+    int ans = get_xor(a, 1, n);
+    if ((x / 2) % 2 == 0) ans ^= dfs(x / 2); // 如果一半是奇数，已经抵消，但如果是偶数，就要计算
+    if (n % 2 == 0) ans ^= dfs(n + 1); // 如果是奇数，已经抵消，只用算一次，不用递归
+    return ans;
+};
+```
+
+
+
+
+================================================
+File: content/刷题日记25-03-06.md
+================================================
+---
+title: 刷题日记25-03-06
+date: 2025-03-06
+categories: [题解,acm]
+excerpt: 博主2025-03-06的刷题日记
+---
+
+# 刷题日记25-03-06
+本日居然板刷了四场abc，虽然不少题似乎不经思考就直接看题解了，但是还是有不少收获的。完成最新的四场abc392 - 395（除了最后一题，超出我的能力范围）
+
+# abc395
+
+## D
+
+并查集，映射，思维（919，黄）
+
+题意：
+
+有N只鸽子（编号 1 到N）和 N个巢（编号 1 到N），初始时鸽子i在巢i中。进行Q次操作：
+
+- **类型 1**：将鸽子a 从当前巢移到巢b。
+- **类型 2**：交换巢 a和巢b中的所有鸽子（同时进行）。
+- **类型 3**：报告鸽子a 当前所在的巢编号。
+
+思路：
+
+这里并没有使用并查集，而是通过引入"坐标"的新一层抽象，简化了问题
+
+鸽子移动到巢->鸽子移动到另一个坐标
+
+两个巢穴中的所有鸽子互换位置->两个巢穴交换，鸽子不动，但是鸽子->位置->巢穴的映射改变了
+
+- 不直接追踪每个巢的鸽子列表，而是用3个数组：
+  - home[i]：鸽子i所属的巢编号。
+  - ed[i]：位置i当前对应的巢编号。
+  - st[i]：巢i当前所在的位置。
+- 操作：
+  - 类型 1：更新 home[i]为目标巢。
+  - 类型 2：交换两个巢的位置。
+  - 类型 3：通过ed home查询位置。
+
+```cpp
+if (op == 1)
+{
+    int a, b;
+    cin >> a >> b;
+    home[a] = st[b]; // 分离了鸽子和巢，用坐标连接起来表示
+}
+else if (op == 2)
+{
+    int a, b;
+    cin >> a >> b;
+    ed[st[a]] = b; // 原先巢 a 的坐标现在对应巢 b
+    ed[st[b]] = a; // 原先巢 b 的坐标现在对应巢 a
+    swap(st[a], st[b]); // 交换巢 a 和巢 b 的坐标位置
+}
+else
+{
+    int a;
+    cin >> a;
+    cout << ed[home[a]] << '\n';
+}
+```
+
+
+
+## E
+
+思维，最短路（978，绿）
+
+题意：
+
+给定一个包含 *N* 个顶点和 *M* 条边的有向图。第 *i* 条边（1≤*i*≤*M*）从顶点 *ui* 指向顶点 *vi*。
+
+初始时，你位于顶点 1，需要通过重复以下操作到达顶点 *N*：
+
+- 选择以下两种操作之一：
+  - **移动操作**：从当前顶点沿边移动到相邻顶点，成本为 1。具体来说，设当前顶点为 *v*，选择一条从 *v* 指向 *u* 的边，移动到顶点 *u*。
+  - **翻转操作**：反转所有边的方向，成本为 *X*。具体来说，在操作前存在的每条从 *v* 到 *u* 的边，在操作后将变为从 *u* 到 *v* 的边，反之亦然。
+
+题目保证存在从顶点 1 到顶点 *N* 的操作序列。
+
+请计算到达顶点 *N* 所需的最小总成本。
+
+思路：
+
+- 把上下翻转视为双层图，即把代价视为两层之间的路径，两层的所有边顺序相反
+
+- 这样建边之后跑dijkstra即可
+
+
+
+## F
+
+思维，二分答案（1437，绿）
+
+题意：
+
+高桥君共有 2*N* 颗牙齿，其中 *N* 颗是上牙，剩余的 *N* 颗是下牙。
+
+左数第 *i* 颗（1≤*i*≤*N*）上牙的长度为 *Ui*，左数第 *i* 颗（1≤*i*≤*N*）下牙的长度为 *Di*。
+
+当高桥君的牙齿满足以下两个条件时，称为「良好咬合」：
+
+1. 存在一个整数 *H*，使得对于所有 1≤*i*≤*N*，有 *Ui*+*Di*=*H*。
+2. 对于所有 1≤*i*<*N*，有 ∣*Ui*−*Ui*+1∣≤*X*。
+
+高桥君可以执行以下操作任意次：
+
+- 支付 1 日元使用磨牙工具，选择一个长度为正的牙齿，将其长度减少 1。
+
+除上述操作外，无法通过其他方式改变牙齿长度。请计算高桥君达成良好咬合所需支付的最小金额。
+
+思路：
+
+- 要求最小化金额，也就是最大化所有牙齿最后的上下牙之和H，因此想到二分这个H，关键在于check()函数如何处理
+
+- 关键在于根据两个限制条件找到范围公式：
+
+- 对于一个位置的两颗牙齿，自身的长度只能缩小。因此可以得到上牙自身的范围：
+
+```cpp
+int l1 = max(0ll, h - d[i]);
+int r1 = min(u[i], h);
+```
+
+- 而当前牙齿的长度范围需要和上一颗牙齿的范围扩大之后（贪心，利用绝对值差<=x）的范围取交集
+
+```cpp
+int l2 = max(l1, l - x);
+int r2 = min(r1, r + x);
+```
+
+集合不断更新，需要保持集合存在，否则即为check失败。由此通过二分答案找到最优解。
+
+另外，题解中有On方法，但是很难想到
+
+
+
+# abc394
+
+## E
+
+最短路，回文串（1403，绿）
+
+题意：
+
+给定一个包含 *N* 个顶点的有向图，顶点编号为 1,2,…,*N*。
+
+边的信息由 $N^2$个字符 给出。其中为小写字母$C_{i,j}$或 `-`。
+
+- 当 $C_{i,j}$为小写字母时，存在一条从顶点 *i* 到顶点 *j* 的边，且该边的标签为$C_{i,j}$。
+- 当$C_{i,j}$为 `-` 时，不存在从顶点 *i* 到顶点 *j* 的边。
+
+对于所有满足 1≤*i*,*j*≤*N* 的整数对 (*i*,*j*)，请回答以下问题：
+
+- 找出从顶点 *i* 到顶点 *j* 的路径（不要求是简单路径），使得路径上边标签按顺序组成的字符串是回文。在所有满足条件的路径中，输出最短路径的长度。若不存在这样的路径，输出 −1。
+
+思路：
+
+回文串两侧扩展相同字符之后仍然是回文串，利用这个属性，进行类似最短路和floyd的递推。而基准点是：空串和单字符都视为回文串
+
+**回文性质**：
+
+- 空串是回文（长度 0）。
+- 单字符是回文（长度 1）。
+- 若S是回文，在首尾添加相同字符仍是回文。
+
+**算法设计**：
+
+- 用 ans(i,j)表示从i到j的最短回文路径长度。
+- 初始：
+  - i == j：长度 = 0（空路径）。
+  - $C[i][j] \neq '-'$且$i \neq j$：长度 = 1（单边）。
+- 扩展：若ans(i,j)已知，且存在边k->i和j->l，且满足这两条边相同，则k->l的路径也是回文，长度为ans(i,j) + 2
+
+**BFS**：
+
+- 用队列存储已知的回文路径点对，逐步扩展。
+
+```cpp
+// 初始化，所有点对的最短回文路径长度为无穷大
+memset(ans, 0x3f, sizeof(ans));
+
+// 处理基础情况1：同一点到自身，路径长度为0（空串是回文）
+for (int i = 1; i <= n; i++)
+    ans[i][i] = 0, q.push({ i, i });
+
+// 处理基础情况2：直接相连的点，路径长度为1（单字符是回文）
+for (int i = 1; i <= n; i++)
+    for (int j = 1; j <= n; j++)
+        if (i != j && c[i][j] != '-')
+            ans[i][j] = 1, q.push({ i, j });
+
+// BFS扩展，利用回文的构造性质
+while (!q.empty())
+{
+    auto u = q.front();
+    q.pop();
+    int i = u.first, j = u.second; // 当前已知的回文路径，从i到j
+
+    // 尝试扩展：考虑所有可能的"外层点对"(k,l), 思路类似floyd
+    for (int k = 1; k <= n; k++)
+        if (c[k][i] != '-') // 存在从k到i的边
+            for (int l = 1; l <= n; l++)
+                if (c[k][i] == c[j][l]) // 边标签相同，可以构成新回文
+                    if (ans[k][l] == INF) // 首次发现从k到l的回文路径
+                        ans[k][l] = ans[i][j] + 2, q.push({ k, l }); // 更新路径长度并加入队列
+}
+```
+
+
+
+## F
+
+树形dp，排序，贪心(1549,绿)
+
+题意：
+
+给定一棵包含 *N* 个顶点的无向树 *T*。顶点编号为 1,2,…,*N*，第 *i* 条边连接顶点 *Ai* 和顶点 *Bi*。
+
+定义满足以下两个条件的图为**烷烃**：
+
+- 该图是一棵无向树
+- 所有顶点的度数为 1 或 4，且至少存在一个度数为 4 的顶点
+
+请判断 *T* 中是否存在满足烷烃定义的子图。若存在，求此类子图的顶点数的最大值；否则输出 −1。
+
+思路：
+
+- dp(i,fa) 表示以i为根、fa为父亲的最大子图的结点数量
+- 若u是根（无父节点），需要 4 个子树；若u是非根，需要 3 个子树（父节点占一个度）。
+
+- 为什么要管父亲，因为题干说至少有一个度数=4的点，那么这个点一定是根节点。也就是要从根节点开始dp，尝试所有度数>=4的点，对于每个根节点得到的子图大小取最大值。
+
+- 对于每个点计算子树节点数量的时候，贪心取得子节点最多的几个点即可。也就是对当前结点u的子树从大到小排序，取最大的need个作为子树结点数
+- 若子树数不足need，dp(u,fa)=1（仅u自身）。
+
+```cpp
+void dfs(int u, int fa)
+{
+    // 记忆化搜索
+    if (dp[u][fa] != 0)
+        return;
+
+    // 确定需要的子树数：根节点需要4个，非根需要3个
+    int need = 3 + (fa == 0);
+
+    // 存储所有子树的dp值
+    vector<int> ls;
+    for (auto i : a[u])
+    {
+        if (i != fa) // 不往父节点走
+        {
+            dfs(i, u);              // 递归处理子树
+            ls.push_back(dp[i][u]); // 记录子树的dp值
+        }
+    }
+
+    // 按dp值从大到小排序，只保留前need大的值
+    sort(ls.begin(), ls.end(), greater<int>());
+    if ((long long)ls.size() > need)
+        ls.resize(need); // 只保留前need个最大值
+
+    // 计算dp值：如果能恰好选need个子树，则累加这些子树的dp值；否则为0
+    int sum = 0;
+    for (auto i : ls)
+        sum += i;
+
+    // 最终dp值 = 子树贡献 + 当前节点(1)
+    dp[u][fa] = ((long long)ls.size() == need ? sum : 0) + 1;
+}
+```
+
+
+
+# abc393 
+
+## D
+
+(533, 黄)
+
+三分法可以求解单峰函数最值问题，注意边界。
+
+```cpp
+while (r - l >= 3)
+{ // 当范围足够大时继续三分
+    int m1 = l + (r - l) / 3;
+    int m2 = r - (r - l) / 3;
+    ll fm1 = func(m1), fm2 = func(m2);
+    if (fm1 <= fm2) // 并不直接取相等情况，那样会有问题
+    {
+        r = m2; // 左半部分可能包含最小值
+    }
+    else
+    {
+        l = m1; // 右半部分可能包含最小值
+    }
+}
+// 在缩小后的范围内枚举最小值
+ll ans = INF;
+for (int i = l; i <= r; i++)
+{
+    ans = min(ans, func(i));
+}
+```
+
+有O(n)正解，只需取所有ai=1的坐标的中间点，全部聚拢在中间即可。题解中没有提到三分法
+
+
+
+## E
+
+思维，gcd，筛法（1253，黄）
+
+题意：
+
+给定一个长度为 $ N $ 的数列 $ A=(A_1,A_2,\dots,A_N) $ 和一个不超过 $ N $ 的正整数 $ K $。 
+对于每个 $ i=1,2,\dots,N $，请解决以下问题：
+
+- 从 $ A $ 中选出包含 $ A_i $ 的 $ K $ 个元素时，求这些元素的最大公约数 (GCD) 可能达到的最大值。
+
+思路：
+
+- 把gcd转化成从小到大遍历，把当前值更新到自己和所有倍数上（如果倍数数量满足条件）
+
+- 类似筛法，和数的范围高度相关，记录倍数的数量
+
+- 如果当前倍数数量达标，更新所有倍数的ans为当前值，从小到大枚举筛选
+
+如下是核心的循环（n * log(n) * log(n))
+
+```cpp
+for (int x = 1; x <= mx; x++){
+    int sum = 0;
+    for (int j = x; j <= mx; j += x)
+    { // 所有倍数的数量之和，范围是数字上限，而不是数组
+        sum += vis[j];
+    }
+    if (sum >= k) 
+    // 如果倍数的数量可以达到k，就更新所有的gcd
+    {
+        for (int j = x; j <= mx; j += x)
+        {
+            ans[j] = max(ans[j], x);
+        }
+    }
+}
+```
+
+
+
+## F
+
+dp，LIS（1284，绿）
+
+题意：
+
+给定一个长度为 $ N $ 的整数序列 $ A=(A_1,A_2,\dots,A_N) $。
+
+请处理 $ Q $ 个查询。第 $ i\ (1 \leq i \leq Q) $ 个查询如下：
+
+- 给定整数 $ R_i $ 和 $ X_i $。求数列 $ (A_1,A_2,\dots,A_{R_i}) $ 的（不一定连续的）子序列中，满足严格单调递增且所有元素不超过 $ X_i $ 的最长长度。保证 $ X_i \geq \min\{ A_1, A_2, \dots, A_{R_i} \} $。
+
+思路：
+
+离线，根据查询的前缀边界排序即可
+
+可以直接在LIS的贪心插入的单调队列中二分查找每个查询的数值限制位置
+
+因为构造单调队列的时候已经贪心取得最小值了，直接二分限制位置已经可以得知可以取得的数量
+
+```cpp
+for (int i = 1; i <= n; i++)
+{
+    auto it = lower_bound(f.begin(), f.end(), a[i]);
+    if (it == f.end())
+        f.push_back(a[i]);
+    else
+        *it = a[i];
+
+    while (qi <= q && query[qi].r == i)
+    { // 处理恰好卡到这里的查询
+        int now = upper_bound(f.begin(), f.end(), query[qi].x) - f.begin() - 1;
+        query[qi++].ans = now;
+    }
+}
+```
+
+
+
+# abc392
+
+## E
+
+图论，并查集，连通分量(1218，绿)
+
+题意：
+
+给定N台服务器（编号 1 到N）和M根电缆，每根电缆连接一对服务器ai,bi
+
+- **操作**：选择一根电缆，将其一端连接到另一台服务器（双向连通）。
+- **目标**：通过最少操作使所有服务器连通（形成一个连通分量），并输出操作次数和序列。
+
+思路：
+
+- 通过并查集寻找成环的多余边，加入一个多余边的集合
+
+- 找到每个连通分量的根节点，用多余边连接不同的连通分量
+
+关键操作:
+
+```cpp
+for (int i = 1; i <= m; i++)
+{
+    int x, y;
+    cin >> x >> y;
+    edges[i] = {x, y, i};
+    int fx = find(x), fy = find(y);
+    if (fx == fy)
+    {
+        extra.push_back(i); // 记录重边,自环或成环边
+    }
+    else
+    {
+        unite(x, y); // 合并连通分量
+    }
+}
+```
+
+实际上想到用并查集就很简单了
+
+
+
+## F
+
+数据结构（1395，蓝）
+
+题意：
+
+初始时有一个空数组 *A*。按 *i*=1,2,…,*N* 的顺序依次执行以下操作：
+
+- 将数字 i 插入 A 的从前数第$p_i$个位置。更准确地说，将 *A* 替换为「*A* 的前$p_{i-1}$个元素」「数字 *i*」「*A* 的第 $p_{i}$个元素及之后的元素」按此顺序连接后的结果。
+
+请输出所有操作完成后最终的数组 *A*。
+
+思路：
+
+从前往后遍历数组，插入当前的第pi个位置，反过来考虑也就是，从后往前遍历数组，插入当前的第pi个空位。因为后插入的数字会该改变先插入的数字的位置，因此先考虑后插入的数字
+
+总的容量是不变的，只需要统计空位的数量和第pi个空位的位置即可。插入之后，需要更新空位数组。
+
+可以通过多种数据结构维护这一问题，这里采取线段树的方法，似乎是最好理解的。底层相当于二分查找目标空位的位置，先找左子树的空位数量，如果大于目标，就递归入左子树找，否则递归入右子树。这里的线段树甚至没有懒标记
+
+代码：
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+const int MAX_N = 5e5 + 10; // 最大数组长度
+
+// 线段树结构体
+struct SegTree
+{
+    vector<int> tr; // 线段树数组，记录区间未赋值位置数
+
+    SegTree(int n) : tr(n * 4, 0) {} // 初始化线段树大小
+
+    // 建树：初始化每个位置为未赋值（1）
+    void build(int node, int left, int right)
+    {
+        if (left == right)
+        {
+            tr[node] = 1; // 叶节点表示单个位置，初始未赋值
+            return;
+        }
+        int mid = (left + right) >> 1;
+        build(node << 1, left, mid);                  // 左子树
+        build(node << 1 | 1, mid + 1, right);         // 右子树
+        tr[node] = tr[node << 1] + tr[node << 1 | 1]; // 更新父节点
+    }
+
+    // 单点更新：将位置 x 标记为已赋值
+    void update(int node, int left, int right, int x)
+    {
+        if (left == right)
+        {
+            tr[node]--; // 未赋值位置数减 1
+            return;
+        }
+        int mid = (left + right) >> 1;
+        if (x <= mid)
+            update(node << 1, left, mid, x);
+        else
+            update(node << 1 | 1, mid + 1, right, x);
+        tr[node] = tr[node << 1] + tr[node << 1 | 1]; // 更新父节点
+    }
+
+    // 查询第 k 个未赋值位置
+    int query(int node, int left, int right, int k)
+    {
+        if (left == right)
+            return left; // 找到叶节点
+        int mid = (left + right) >> 1;
+        if (tr[node << 1] < k) // 左子树未赋值位置不足 k 个
+            return query(node << 1 | 1, mid + 1, right, k - tr[node << 1]);
+        return query(node << 1, left, mid, k); // 在左子树中查找
+    }
+};
+
+int main()
+{
+    ios::sync_with_stdio(false); // 加速输入输出
+    cin.tie(nullptr);
+    cout.tie(nullptr);
+
+    int n;
+    cin >> n;
+    vector<int> pos(n + 1); // 插入位置 P_i，从 1 开始
+    for (int i = 1; i <= n; i++)
+    {
+        cin >> pos[i];
+    }
+
+    vector<int> result(n + 1); // 最终数组 A
+    SegTree seg(n);            // 创建线段树
+    seg.build(1, 1, n);        // 初始化线段树
+
+    // 从后向前插入
+    for (int i = n; i >= 1; i--)
+    {
+        int idx = seg.query(1, 1, n, pos[i]); // 查询第 P_i 个未赋值位置
+        result[idx] = i;                      // 在该位置插入 i
+        seg.update(1, 1, n, idx);             // 更新该位置为已赋值
+    }
+
+    // 输出最终数组
+    for (int i = 1; i <= n; i++)
+    {
+        cout << result[i] << (i < n ? " " : "\n"); // 最后一个数后换行
+    }
+    return 0;
+}
+```
+
+
+
+
+================================================
+File: content/刷题日记25-03-07.md
+================================================
+---
+title: 刷题日记25-03-07
+date: 2025-03-07
+categories: [题解,acm]
+excerpt: 博主2025-03-07的刷题日记
+---
+
+# 刷题日记25-03-07
+
+今天我准备先复习之前写过的cf场，把题目的解题思路和收获写下来，包括核心代码。然后再写一些新题或者abc
+
+复习了最近的四场：edu175 174,1006div3,1005div2，配合ai写了一些题解s![image-20250307154743403](/images/image-20250307154743403.png)
+
+主要涉及的题型：构造，贪心，二分答案，dp，位运算
+
+# edu175
+
+## C
+
+一维序列涂色，二分答案（1500，黄）
+
+题意：给定一个长度为 n 的条带，初始所有单元格为红色。你可以进行最多 k 次操作，每次选择一段连续单元格涂成蓝色（可以覆盖已涂蓝色的单元格，但不能涂成红色）。每个单元格有：
+
+- 期望颜色（红色 'R' 或蓝色 'B'）。
+- 惩罚值 ai（若最终颜色错误，则计入惩罚）。
+- 目标是使最终涂色的**总惩罚值**最小，其中总惩罚值定义为所有错误颜色单元格的惩罚值中的**最大值**（若无错误，则为 0）。
+
+看到所有值的最大值的最小值，想到二分答案。
+
+二分当前的惩罚值。check函数是贪心涂一段序列，如果当前格子的惩罚值大于x，则必须要涂色，或者必须不涂色。因为是涂一个连续段，所以用一个变量表示当前是否在涂色。如果当前惩罚值小于x，则不涂色。
+
+如下是ai优化过的check函数
+
+```cpp
+// 检查是否能在 k 次操作内使所有错误惩罚值 <= x
+bool canAchieve(int x, const vector<int>& penalties, const string& target, int n, int k) {
+    int painting = 0; // 是否正在涂蓝色段（1 表示是）
+    int ops = k;      // 剩余操作次数
+    for (int i = 0; i < n; i++) {
+        if (penalties[i + 1] > x) { // 惩罚值 > x，必须涂正确颜色
+            if (target[i] == 'B') { // 期望蓝色
+                if (!painting) {    // 未在涂色，新开一段
+                    painting = 1;
+                    ops--;
+                }
+            } else {                // 期望红色
+                if (painting) {     // 正在涂蓝，结束此段
+                    painting = 0;
+                }
+            }
+        }
+        if (ops < 0) return false; // 操作次数不足
+    }
+    return true;
+}
+```
+
+
+
+## D
+
+简单树形dp（1600，绿）
+
+题意：给定一棵有根树，根为顶点 1，包含 n个顶点。定义 dx为根到顶点 x   的距离（边数）。初始棋子在根节点，可执行以下操作任意次：
+
+- 从当前顶点v 移动到u ，满足 du=dv+1 。
+  - 若 v 是根（顶点 1），u可以是任意子节点。
+  - 若 v 不是根，u不能是 v 的邻居（无直接边）。 目标是计算**有效顶点序列**的数量，即存在一种移动方式使棋子按顺序访问序列中所有顶点的方案数，结果对 998244353 取模。
+
+树形dp。令dpi = 以当前结点结尾的访问序列方案数，可以由上一层所有结点的方案数之和 - 父节点的方案数得到。因此需要记录每一层的方案数，dfs/bfs转移即可(这里是bfs)。注意负数取模要先加上MOD
+
+```cpp
+q.push(1);
+while (!q.empty()) {
+    int x = q.front();
+    q.pop();
+    for (int y : adj[x]) {
+        if (x == 1) {
+            dp[y] = 1; // 根的子节点直接可达
+        } else {
+            // 子节点 y 的序列数 = 上一层总和 - dp[x]
+            dp[y] = (layer_sum[depth[y] - 1] - dp[x] + MOD) % MOD;
+        }
+        layer_sum[depth[y]] = (layer_sum[depth[y]] + dp[y]) % MOD;
+        q.push(y);
+    }
+}
+```
+
+
+
+# 1006div3
+
+## C
+
+位运算，mex，构造题(1200，黄)
+
+给定长度n和目标值x，构造一个数组，长度为n，所有数的按位或之和=x，并且最大化数组的MEX
+
+**按位或与 x**：
+
+- x 的二进制表示决定数组元素的最小要求。
+- 若 x 的某位为 1，至少一个 ai的该位为 1。
+
+**关键观察**：
+
+- xx的最低 0 位（从右起第一个 0 的位置，记为 t）决定了最大 MEX。
+- 若 x=7=(111)2，最低 0 位是第 3 位（从 0 开始计数），MEX=8
+- 数组需包含 0,1,2,…,2^t−1, MEX 为 2^t。
+
+**构造策略**：
+
+- n=1：直接输出 x。
+
+- n<2^t：填充 0,1,…,n−2,最后补 x。
+
+- n=2^t：正好填 0,1,…,n−1。
+
+- n>2^t：填 0,1,…,2^t-1。剩余全部填 x。
+
+  
+
+## D
+
+逆序对，简单dp（1300，黄）
+
+题意：给定一个长度为n的数组a。Akito 需要使用恰好一次咒语（对子数组(l,r)进行向左循环移位），使操作后的数组逆序对数量最小化。
+
+n^2可以接受。dp(i,j)是在区间内移位减少的逆序对数。状态转移方程如下：
+
+```cpp
+dp[i][j] = dp[i][j-1] + (a[j] < a[i]?1:(a[j] > a[i]?-1:0));
+```
+
+
+
+## E
+
+构造题，构造二维坐标点集，贪心，用递归分解（1500，黄）
+
+题意：在笛卡尔坐标系中放置n个点，0<=n<=500,使其中恰好有k对点满足之间的欧几里得距离=曼哈顿距离。构造任意一对点的坐标。
+
+- 欧几里得距离=曼哈顿距离，相当于两个点的横坐标或者纵坐标相等。
+
+- 而同一行或者同一列的x个点可以贡献x*(x-1)/2个点对（组合数）
+- 用类似二进制拆分的贪心策略，将k分解为若干行的点对数之和，每行 x个点贡献x*(x-1)/2。先找最大 x 满足 x(x−1)/2≤k，剩余 k−x(x−1)/2递归处理（占据下一行，横坐标也相应偏移）
+
+核心代码如下
+
+```cpp
+vector<pii> constructPoints(int k, int x_start = 0, int y_start = 0) {
+    if (k == 0) {
+        return {};
+    }
+    // 找到最大 x，使得 x*(x-1)/2 <= k
+    int x = 0;
+    while (x * (x - 1) / 2 <= k) {
+        x++;
+    }
+    x--; // 回退到满足条件的最大值
+    int pairs = x * (x - 1) / 2; // 当前行贡献的对数
+
+    // 递归处理剩余的 k - pairs
+    vector<pii> next = constructPoints(k - pairs, x_start + x + 1, y_start + 1);
+    
+    // 当前行放置 x 个点
+    vector<pii> current;
+    for (int i = 0; i < x; i++) {
+        current.emplace_back(x_start + i, y_start);
+    }
+    current.insert(current.end(), next.begin(), next.end());
+    return current;
+}
+```
+
+
+
+## F
+
+排列组合，位运算，异或，数论（1700，绿）
+
+现在对我来说很艰难。
+
+给出一个异或杨辉三角的生成公式，给出第一行的k，要求输出第n行的内容
+
+公式如下：
+$$
+T_{i,j} = 
+\begin{cases} 
+T_{i-1,j-1} \oplus T_{i-1,j}, & \text{if } 1 < j < i \\ 
+T_{i-1,j}, & \text{if } j = 1 \\ 
+T_{i-1,j-1}, & \text{if } j = i 
+\end{cases}
+$$
+
+- 通过观察，发现 $Tn,j $与组合数 $\binom{n-1}{j-1}$ 的奇偶性相关：
+- 当$\binom{n-1}{j-1}$ 为奇数时：$ T_{n,j} = k$
+- 当$\binom{n-1}{j-1}$ 为偶数时：$ T_{n,j} = 0$
+
+代码使用条件 (j−1)&(n−1)==j−1 判断奇偶性，这来源于卢卡斯定理。
+
+<img src="/images/image-20250307113615959.png" style="zoom:50%;" />
+
+```cpp
+void solve() {
+    int n, k;
+    cin >> n >> k;
+    int mask = n - 1; // 用于检查 j-1 的二进制位是否为 n-1 的子集
+
+    // 直接输出第 n 行元素，避免额外的 vector 存储
+    for (int j = 1; j <= n; j++) {
+        int pos = j - 1; // 对应组合数 C(n-1, j-1) 的下标
+        cout << ((pos & mask) == pos ? k : 0); // 判断奇偶性并输出 k 或 0
+        cout << (j < n ? " " : "\n"); // 最后一个元素后换行，其余空格
+    }
+}
+```
+
+
+
+# 174edu
+
+## B
+
+涂色题，贪心（1200，深黄）
+
+给定一个 n×m 的表格，初始时第 i行第 j 列的颜色为$a_{i,j}$  。
+
+- **陌生人（strangers）**：两个单元格不共享边（即不相邻，仅允许角落接触）。
+- **陌生人集合**：集合中任意两单元格都不相邻（包含 0 或 1 个单元格的集合也算）。
+- **操作**：选择一个颜色相同的陌生人集合，将其涂成任意颜色。 目标：将整个表格涂成单一颜色，求最少操作次数。
+
+对于任意一个颜色的集合，如果有相邻格子，总可以找到一种方式用两次将它们改变颜色(类似象棋棋盘)。如果没有相邻格子，则只需要一次操作。由此贪心即可
+
+
+
+## C
+
+DP，三个状态之间的转移（1500，黄）
+
+题意：给定一个长度为 n 的整数数组 a，其中每个元素$a_i \in \{1, 2, 3\}$。求数组中“美丽子序列”的数量，结果对998244353取模。
+
+- 美丽子序列定义
+  - 长度至少为 3。
+  - 除第一个元素外，每个元素左侧有比它小的元素。
+  - 除最后一个元素外，每个元素右侧有比它大的元素。
+
+因此根据定义，可能的序列只能是1222....2223，根据这种限制状态转移，最后取以3结尾的序列数量
+
+DP(i,x)表示前i个数字，以x结尾的序列数量
+
+x=1,当前只有1个序列，即它自身
+
+x=2，可以从之前所有以2结尾的序列继承得到，也可以由之前所有以1结尾的序列继承得到
+
+x=3，由2结尾的序列继承得到
+
+第一维i可以舍弃，因为都是继承之前的和，而不是某个单个位置的值。
+
+思路其实很简单，以下是dp代码
+
+```cpp
+vector<int> dp(4, 0);
+dp[0] = 1;
+while (n--)
+{
+    int x;
+    cin >> x;
+    if (x == 2)
+        dp[x] = (dp[x] + dp[x]) % MOD;
+    dp[x] = (dp[x] + dp[x - 1]) % MOD; // 注意顺序
+}
+cout << dp[3] << '\n';
+```
+
+
+
+
+
+## D
+
+字符串处理，回文串，二分答案（1800，绿）
+
+题意：给定一个由小写拉丁字母组成的字符串 s。
+
+- **操作**：选择一个连续子串（可为空），对其字符进行任意重排，最多操作一次。
+- **目标**：将 s 变成回文串，求操作子串的最小长度。
+
+首先去除两端的相同字母。对于剩余字符串，因为是重排连续序列使之成为回文串，一定需要从头或者从尾开始重排。因此假设从头开始重排，二分出最近的右端点即可，然后反转字符串再进行一遍相同操作。
+
+接下来是check()函数，经过ai的优化比较清晰了
+
+```cpp
+// 检查前缀 [0, p] 是否可行
+bool check(const string& s, int p, const vector<int>& total) {
+    int n = s.size();
+    // 检查 p 外的匹配
+    for (int i = p + 1; i < n; i++) {
+        if (n - 1 - i > p && s[i] != s[n - 1 - i]) {
+            return false; // 不可调整的非回文对
+        }
+    }
+    // 统计需求量
+    vector<int> need(26, 0);
+    for (int i = 0; i <= p; i++) {
+        int j = n - 1 - i;
+        if (j > p) {
+            need[s[j] - 'a']++; // 需要在 [0, p] 中提供 s[j]
+        }
+    }
+    // 检查是否每种字符的可用量足够
+    for (int c = 0; c < 26; c++) {
+        if (need[c] > total[c] / 2) { // 回文需两侧匹配
+            return false;
+        }
+    }
+    return true;
+}
+```
+
+- 当前要重排的长度之外的字符，如果对称位置不满足回文性质，则不可
+- 当前要重排的序列之内的字符如果和对称位置不同，则计算入need数组，最后和这段序列的所有字母数量相比较，如果need[c] > total[c] / 2，则表示不可
+
+关键是需要根据回文串的性质想到二分答案。然后check()函数不太好想
+
+
+
+# 1005div2
+
+## B
+
+双指针（1100，深黄）
+
+关键是要理解题意
+
+题意：
+
+给定一个数组 a，可以最多一次移除一个非空连续子数组，目标是使操作后数组的分数最大。
+
+- **分数定义**：数组长度减去不同元素的数量。
+- **操作**：选择 $l \leq r \leq n$，移除子数组$ [a_l, a_{l+1}, \ldots, a_r]$。
+- **要求**:
+  1. 分数最大。
+  2. 若分数相同，选择操作后数组长度最短的解。
+  3. 若仍有多解，输出任意一解。
+
+因此有：
+
+- 如果删除一个只出现过一次的数字，长度减少，不同元素数量也减少，分数不变；但是如果删除出现多次的数字，分数就会减少
+
+- 找到一段最长的连续序列，其中每个数字只出现过一次
+
+- 用双指针
+
+  如下是ai写的一段双指针，非常规范
+
+  ```cpp
+  for (int i = 0; i < n; i++) {
+      if (mp[a[i]] == 1) { // 表示出现的数量
+          int len = 1;
+          while (i + len < n && mp[a[i + len]] == 1) {
+              len++;
+          }
+          if (len > maxlen) {
+              maxlen = len;
+              ansl = i + 1; // 1-based 索引, 这里只记录左端点
+          }
+          i = i + len - 1; // 跳到段末
+      }
+  }
+  ```
+
+
+
+## C
+
+简单DP，贪心（1300，深黄）
+
+给定一个长度为n 的数组a，元素为非零整数。初始有 0 枚硬币，重复以下操作直到数组为空：
+
+- 设当前数组大小为m。
+- 选择一个位置 i (1≤i≤m )
+  - 获得 $|a_i|$枚硬币。
+  - 若$a_i < 0$，删除从$a_i$开始的后缀（保留 $[a_1, \ldots, a_{i-1}]$）。
+  - 若$a_i > 0$，删除以$a_i$结尾的前缀（保留$[a_{i+1}, \ldots, a_m]$）
+
+- 目标：计算最终能获得的最大硬币数量。
+
+贪心地考虑，一定是从从前到后取正的ai,从后往前取负数，直到两头碰在一起。于是想到，做一个只有正数的前缀和和只有负数绝对值的后缀和，枚举最大的pre[i] + suf[i]即可
+
+
+
+## D
+
+DP，位运算，前缀异或和（1900，绿）
+
+题意：
+
+给定一个长度为n的数组 w，表示n个史莱姆的体重。第i个史莱姆可以吃掉第j个史莱姆当且仅当$w_i \geq w_j$。吃掉后，$w_i = w_i \oplus w_j$，$w_j$消失。现给出操作如下：
+
+- 在数组末尾添加一个体重为x的史莱姆。
+- 新史莱姆从右向左尝试吃左侧相邻史莱姆，若无法吃则停止。
+- 得分为被吃掉的史莱姆数。 有 q次询问，每次给定体重x，求每次的实验得分（每次都不是真的吃掉）
+
+分析思路：
+
+- 涉及到异或以及比大小，我们先想数字的二进制性质。对一个数字的大小有决定性影响的是它的最高有效位（msb），如果a > b,有msb(a) >= msb(b)。如果msb(a) == msb(b)，a和b异或之后，a的msb将变为0（异或的性质）。
+
+- 所以，我们可以预处理出对于每一个以i结尾的前缀序列，最右侧的第一个msb>=j的数字的位置，形成dp数组。而x到第一个最高有效位大于等于它的数字之前的所有数字ai都一定有 x > ai。这就可以简化处理查询的速度，每个查询从线性时间到只需要x的位数的时间，也就是常数时间。
+- 跳到最高有效位之后，x和中间序列的异或和异或，之后再和目标数字比较，如果x>=目标数字，可以继续循环，否则结束循环。
+
+预处理：
+
+```cpp
+const int W = 30;
+vector<vector<int>> pre(n + 1, vector<int>(W + 1, 0));
+for (int i = 1; i <= n; i++)
+{
+    int msb = __lg(w[i]); // 最高有效位
+    for (int j = 0; j <= msb; j++)
+    {
+        pre[i][j] = i; // 比当前msb小或相等的最高有效位数字的最近跳转位置都是当前位置
+    }
+    for (int j = msb + 1; j <= W; j++)
+    {
+        pre[i][j] = pre[i - 1][j]; // 否则直接继承
+    }
+}
+```
+
+核心循环：
+
+```cpp
+while (q--)
+{
+    int x;
+    cin >> x;
+    int now = n; // 当前位置
+    for (int j = W; j >= 0; j--)
+    {
+        if (x < (1LL << j))
+            continue;          // x 不足以吃这一位
+        int nxt = pre[now][j]; // 左侧最近 w_k >= 2^j， 不能直接吃掉
+        x ^= s[now] ^ s[nxt];  // 吃掉 (nxt, now]
+        now = nxt;
+        if (now == 0 || w[now] > x)
+            break;   // 吃不动或结束
+        x ^= w[now]; // 吃掉 w[now]
+        now--;
+    }
+    cout << n - now << ' ';
+}
+```
+
+其实可以理解为把x可以吃掉的所有位数进行了二进制拆分，然后贪心跳转，通过异或前缀和处理序列数据。还是需要加深对于二进制转换和位运算的理解才行。
+
+
+
+================================================
+File: content/刷题日记25-03-08.md
+================================================
+---
+title: 刷题日记25-03-08
+date: 2025-03-08
+categories: [题解,acm]
+excerpt: 博主2025-03-08的刷题日记
+---
+
+# 刷题日记25-03-08
+
+今天准备先复习两套cf，然后写新的cf和at
+
+最后似乎没有完成，剩下的下次补上，今天下午去做了一下网站
+
+# 1004div2
+
+这场偏思维，没有什么需要列出来的代码，都是想到了就能写出来，想不到就没辙。还是多积累一些trick吧
+
+## B
+
+贪心（1200，深黄）
+
+题意：
+
+你有两个装数字的大袋子。初始时，第一个袋子包含 $n$ 个数字：$a_1, a_2, \ldots, a_n$，而第二个袋子为空。你可以执行以下两种操作：
+
+- 从第一个袋子中选择任意数字移动到第二个袋子。
+- 从第一个袋子中选择一个同时在第二个袋子中存在的数字，并将其增加一。
+
+你可以以任意顺序执行无限次上述两种操作。是否可能使两个袋子的内容完全相同？
+
+
+
+思路：
+
+当时莫名想复杂了，实际上简单贪心即可。考虑到n<=1e3，可以直接开桶枚举。一个数字必须要>=2，消耗掉两个，一个放在a,一个放在b，剩下的都可以进位挪走。贪心地从小到大操作，看是否可以把所有数字转为偶数个
+
+
+
+## C
+
+数学，枚举（1500，黄）
+
+题意：
+
+给定一个正整数n。每次操作可以给n加上一个仅由数字 9 组成的正整数（例如 9、99、999 等）。目标：求最小的操作次数，使得n的十进制表示中至少包含一个数字 7。
+
+
+
+思路：
+
+- 首先，如果把999..999视为10^k - 1，会极大地简化问题。最后的 -1 对于高位没有影响，因此，如果考虑加同一个数字，最多只需要7次（原本的位数=0）就可以凑出来7
+- 因此，我们可以发现，只在同一位加数字是一定比在不同位累加地效率更高的。不同位加数字，要么是低位自己达到7，要么是低位进位对于高位产生影响（原本就>7），两种情况都不如直接在同一位加来的快
+- 枚举对每一位加$10^k - 1$最快达到7的最小数量即可
+
+
+
+## D
+
+图论，交互题（1400）
+
+题意：
+
+给定一个数组$x_1, x_2, \ldots, x_n$，元素为 1 到$n$的整数。评测系统有一个隐藏数组$y_1, y_2, \ldots, y_n$，同样为 1 到n的整数，且满足：
+
+- $x_i \neq y_i$（对应位置不同）。
+- 所有$(x_i, y_i)$对两两不同。
+
+评测系统秘密选择了以下两种对象之一：
+
+- **对象 A**：一个有向图，n个顶点（编号 1 到n），n条边$x_i \to y_i$。
+- **对象 B**：n个平面上的点，第i个点坐标为 $(x_i, y_i)$。
+
+你可以通过查询区分对象：
+
+- 查询：输入 i,j（$1 \leq i, j \leq n, i \neq j$），返回：
+  - 对象 A：顶点i到j的最短路径长度（边数），无路径返回 0。
+  - 对象 B：点i和j的曼哈顿距离$|x_i - x_j| + |y_i - y_j|$
+- **限制**：最多 2 次查询。
+
+目标：确定评测系统选择的是对象 A 还是 B。
+
+
+
+思路：
+
+根据 a 数组是否是一个排列来分类讨论。
+
+- 如果不是排列，说明有$x_i$没有出现过，如果作为对象A的端点，则这条边肯定不存在（单向边）
+- 如果是排列，则找到一对xi = 1,xj = n,此时如果作为对象B的点对，他们的距离一定>=n-1，而且调换方向之后距离不变，但是对于对象A的单向边而言，调换方向之后距离一定改变
+
+由此确定对象是A还是B
+
+
+
+## E
+
+mex，思维，模拟（1900，但是偏高）
+
+题意：
+
+给定一个长度为 n 的非负整数序列$a_1, a_2, \ldots, a_n$。定义一个序列为**魔术序列**，若对于所有$1 \leq i \leq n-1$，满足：$\min(a_1, \ldots, a_i) \geq \text{mex}(a_{i+1}, \ldots, a_n)$。其中，$\text{mex}(S)$是集合 S 中最小的未出现的非负整数。特别地，长度为 1 的序列总是魔术序列。
+
+任务：找出序列 a 的最长魔术子序列的长度。
+
+
+
+思路：
+
+- 这里涉及到mex和比大小，我们需要对于mex的性质有所察觉。如果一个序列中没有0，那么mex值就是0，这里的前缀min >= 后缀mex一定成立。因此，我们从0入手解决问题
+- 为什么只考虑0，因为0是mex的根基，去除其他数字不会比只去掉0更优。
+- 如果没有 0 ，最长的序列就是自身。因此统计所有0的数量，全部去除就是一个可行的答案。
+- 但是有一个特例：如果0出现在子序列的第一个位置，则premin = sufmex = 0，照样成立。因此我们可以尝试保留一个0，然后模拟一遍是否成立。我们只保留第一个0，但是如果这个0的位置过于靠右，还是会使其不成立。
+- 这样模拟一遍即可
+
+
+
+# 1002div2
+
+
+
+
+================================================
+File: content/博客开发日志.md
+================================================
+---
+title: 博客开发日志
+date: 2025-03-09
+categories: [博客,开发]
+excerpt: 本博客网站的开发日志
+---
+
+# 博客开发日志
+
+## 2025-03-08
+
+今天用了一个下午和半个晚上的时间搭建了本网站的骨架。由于本人的前端开发能力太弱，很多工作极大程度上依赖ai。
+
+主要就是用next.js渲染markdown文本，构成静态页面内容。
+
+分类和存档的内容还没有完成，
+
+
+================================================
+File: lib/markdown.js
+================================================
+const fs = require("fs");
+const path = require("path");
+const matter = require("gray-matter");
+
+async function getMarkdownFiles() {
+  const postsDirectory = path.join(process.cwd(), "content");
+  if (!fs.existsSync(postsDirectory)) return [];
+  const filenames = fs.readdirSync(postsDirectory);
+  return filenames.filter((filename) => filename.endsWith(".md"));
+}
+
+async function getPostMetadata(filename) {
+  const filePath = path.join(process.cwd(), "content", filename);
+  const fileContent = fs.readFileSync(filePath, "utf-8");
+  const { data, content } = matter(fileContent);
+
+  const title = data.title || extractTitleFromContent(content);
+  const excerpt = data.excerpt || createExcerpt(content);
+  const wordCount = content.trim().split(/\s+/).length;
+  const readingTime = Math.max(1, Math.ceil(wordCount / 200));
+
+  // 确保 categories 始终是数组并去重
+  let categories = data.categories || [];
+  if (typeof categories === "string") {
+    categories = categories.split(",").map((item) => item.trim());
+  }
+  categories = [...new Set(categories)]; // 去重
+
+  return {
+    slug: filename.replace(".md", ""),
+    title,
+    date: data.date ? new Date(data.date).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+    excerpt,
+    readingTime,
+    categories,
+  };
+}
+
+async function getPostData(slug) {
+  const decodedSlug = decodeURIComponent(slug);
+  const filePath = path.join(process.cwd(), "content", `${decodedSlug}.md`);
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`文件未找到: ${filePath}`);
+  }
+
+  const fileContent = fs.readFileSync(filePath, "utf-8");
+  const { data, content } = matter(fileContent);
+
+  const title = data.title || extractTitleFromContent(content);
+  const wordCount = content.trim().split(/\s+/).length;
+  const readingTime = Math.max(1, Math.ceil(wordCount / 200));
+
+  // 确保 categories 始终是数组并去重
+  let categories = data.categories || [];
+  if (typeof categories === "string") {
+    categories = categories.split(",").map((item) => item.trim());
+  }
+  categories = [...new Set(categories)]; // 去重
+
+  return {
+    slug: decodedSlug,
+    title,
+    date: data.date ? new Date(data.date).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+    content,
+    excerpt: data.excerpt || createExcerpt(content),
+    readingTime,
+    categories,
+  };
+}
+
+function extractTitleFromContent(content) {
+  const titleMatch = content.match(/^#\s+(.*)$/m);
+  return titleMatch ? titleMatch[1] : "无标题";
+}
+
+function createExcerpt(content) {
+  return (
+    content
+      .replace(/^#\s+.*$/m, "")
+      .replace(/!\[.*?\]\(.*?\)/g, "")
+      .replace(/\[.*?\]\(.*?\)/g, "$1")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 150) + "..."
+  );
+}
+
+module.exports = { getMarkdownFiles, getPostMetadata, getPostData };
+
+
+================================================
+File: lib/utils.js
+================================================
+import { clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs) {
+  return twMerge(clsx(inputs));
+}
+
+
