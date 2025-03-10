@@ -46,7 +46,7 @@ export default async function Post({ params }) {
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         {/* 返回按钮 */}
         <Link 
           href="/" 
@@ -95,7 +95,7 @@ export default async function Post({ params }) {
         </header>
 
         {/* 内容区域 */}
-        <article className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm p-4 sm:p-6 md:p-8 mb-8">
+        <article className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm p-6 sm:p-8 md:p-10 mb-8">
           <MarkdownRenderer 
             content={postData.content} 
             className="prose prose-sm sm:prose-base max-w-none 
