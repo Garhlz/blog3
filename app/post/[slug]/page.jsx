@@ -84,7 +84,7 @@ export default async function Post({ params }) {
       .use(remarkRehype, { allowDangerousHtml: true })
       .use(rehypeRaw)
       .use(rehypePrism, { showLineNumbers: true, ignoreMissing: true })
-      .use(rehypeKatex)
+      .use(rehypeKatex, {strict: false})
       .use(rehypeStringify)
       .process(postData.content);
 
