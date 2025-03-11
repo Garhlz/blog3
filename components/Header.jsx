@@ -82,11 +82,11 @@ export default function Header() {
                   <span className="mt-1 text-sm">归档</span>
                 </Link>
                 <Link
-                  href="/about"
+                  href="/questions"
                   className="flex flex-col items-center text-gray-600 hover:text-primary transition-colors"
                 >
                   <User className="h-6 w-6" />
-                  <span className="mt-1 text-sm">关于</span>
+                  <span className="mt-1 text-sm">题库</span>
                 </Link>
               </div>
               
@@ -111,11 +111,11 @@ export default function Header() {
                   <span>归档</span>
                 </Link>
                 <Link
-                  href="/about"
+                  href="/questions"
                   className="flex items-center space-x-1 text-gray-600 hover:text-primary transition-colors"
                 >
                   <User className="h-4 w-4" />
-                  <span>关于</span>
+                  <span>题库</span>
                 </Link>
               </div>
             </nav>

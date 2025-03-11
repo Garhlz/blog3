@@ -1,7 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+@import "prismjs/themes/prism-okaidia.css";
 :root {
   --foreground: 51, 51, 51;
   --background: 250, 248, 245;
@@ -68,7 +68,7 @@ body {
   }
 
   .markdown-content code {
-    @apply font-mono text-sm;
+    @apply font-mono text-xs;
   }
 
   .markdown-content :not(pre) > code {
@@ -473,6 +473,32 @@ body {
     width: 100% !important;
     margin-bottom: 2rem;
   }
+}
+
+.article-card .aspect-video {
+  position: relative;
+  overflow: hidden;
+}
+
+.article-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.article-card:hover img {
+  transform: scale(1.05);
+}
+
+.article-card .bg-gradient-to-t {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+button.rounded-lg {
+  border-radius: 0.5rem !important;
 }
 
 }

@@ -18,8 +18,8 @@ export default function Footer() {
             <Link href="/archives" className="text-gray-600 hover:text-primary transition-colors">
               归档
             </Link>
-            <Link href="/about" className="text-gray-600 hover:text-primary transition-colors">
-              关于
+            <Link href="/questions" className="text-gray-600 hover:text-primary transition-colors">
+              题库
             </Link>
           </div>
         </div>
