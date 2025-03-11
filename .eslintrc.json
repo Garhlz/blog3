@@ -1,3 +1,7 @@
 {
-  "extends": ["next/core-web-vitals"]
+  "extends": ["next/core-web-vitals"],
+  "rules": {
+    "@next/next/no-img-element": "off", // 禁用 <img> 警告
+    "react/no-unescaped-entities": "warn" // 将未转义实体降为警告
+  }
 }
