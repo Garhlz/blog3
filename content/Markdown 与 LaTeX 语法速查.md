@@ -7,13 +7,6 @@ excerpt: Markdown 与 LaTeX 语法简介
 
 # Markdown 与 LaTeX 语法速查
 
-## 目录
-1. [Markdown 基础语法](#markdown-基础语法)
-2. [LaTeX 基础语法](#latex-基础语法)
-3. [组合使用场景](#组合使用场景)
-
----
-
 ## Markdown 基础语法
 
 ### 1. 标题
