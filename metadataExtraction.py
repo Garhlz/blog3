@@ -4,7 +4,7 @@ def extract_problems_from_markdown(file_path):
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
     
-    # 找到所有二级标题及其后的标签行
+    # 匹配二级标题及其后的标签行
     pattern = r'##\s+([^\n]+)\n\n([^\n]+)'
     matches = re.findall(pattern, content)
     
@@ -12,22 +12,25 @@ def extract_problems_from_markdown(file_path):
     problem_id = 43  # 从12开始，根据示例
     
     for title, tags_line in matches:
-        # 提取标题中的问题名称（去除可能的标签部分）
+        # 提取标题作为问题名称
         problem_name = title.strip()
         
         # 处理标签行
-        # 匹配中文逗号分隔的标签和可能的括号内容
         tags = []
-        # 分割标签行并处理括号
-        parts = tags_line.split('，')
-        for part in parts:
-            part = part.strip()
-            # 如果有括号，去掉括号保留内容
-            if '（' in part and '）' in part:
-                content = part[part.find('（')+1:part.find('）')]
-                tags.append(content)
-            else:
-                tags.append(part)
+        # 先提取括号内的内容（如果有）
+        bracket_content = []
+        if '（' in tags_line and '）' in tags_line:
+            bracket_part = tags_line[tags_line.find('（')+1:tags_line.find('）')]
+            bracket_content = [tag.strip() for tag in bracket_part.split('，')]
+            # 移除括号及其内容，保留前面的部分
+            tags_line = tags_line[:tags_line.find('（')].strip()
+        
+        # 处理括号前的标签（如果有）
+        if tags_line:
+            tags.extend([tag.strip() for tag in tags_line.split('，')])
+        
+        # 添加括号内的标签
+        tags.extend(bracket_content)
         
         # 创建问题字典
         problem = {
@@ -51,24 +54,18 @@ def generate_metadata(problems):
     return metadata
 
 def process_markdown_file(input_file, output_file):
-    # 提取问题信息
     problems = extract_problems_from_markdown(input_file)
-    
-    # 生成元数据
     metadata = generate_metadata(problems)
     
-    # 读取原文件内容
     with open(input_file, 'r', encoding='utf-8') as f:
         original_content = f.read()
     
-    # 将元数据添加到文件开头
     output_content = metadata + '\n' + original_content
     
-    # 写入新文件
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write(output_content)
 
 # 使用示例
-input_file = '刷题日记25-03-12.md'  # 输入的Markdown文件
-output_file = 'output.md' # 输出的结果文件
+input_file = '刷题日记25-03-12.md'
+output_file = 'output.md'
 process_markdown_file(input_file, output_file)
