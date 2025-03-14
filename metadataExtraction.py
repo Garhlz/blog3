@@ -9,7 +9,7 @@ def extract_problems_from_markdown(file_path):
     matches = re.findall(pattern, content)
     
     problems = []
-    problem_id = 43  # 从12开始，根据示例
+    problem_id = 50  # 从12开始，根据示例
     
     for title, tags_line in matches:
         # 提取标题作为问题名称
@@ -53,7 +53,7 @@ def generate_metadata(problems):
     metadata += '---\n'
     return metadata
 
-def process_markdown_file(input_file, output_file):
+def process_markdown_file(input_file, output_file ):
     problems = extract_problems_from_markdown(input_file)
     metadata = generate_metadata(problems)
     
@@ -66,6 +66,6 @@ def process_markdown_file(input_file, output_file):
         f.write(output_content)
 
 # 使用示例
-input_file = '刷题日记25-03-12.md'
+input_file = '刷题日记25-03-13.md'
 output_file = 'output.md'
 process_markdown_file(input_file, output_file)
