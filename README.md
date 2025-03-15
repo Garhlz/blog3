@@ -3,6 +3,8 @@
 
 
 每次更新内容时需要重置sqlite数据库，运行：npm run db:init
+使用jieba-wasm
+部署失败
 ---
 
 ## **技术栈**  
