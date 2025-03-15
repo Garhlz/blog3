@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "cross-env NODE_OPTIONS=\"--experimental-json-modules --unhandled-rejections=strict\" next dev",
-    "build": "npm run db:init && next build",
+    "build": "next build",
+    "start": "next start",
     "db:init": "node scripts/init-db.js",
     "db:reset": "rimraf db/blog.db* && npm run db:init"
   },
