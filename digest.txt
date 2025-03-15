@@ -3,6 +3,7 @@ Directory structure:
     ├── README.md
     ├── components.json
     ├── jsconfig.json
+    ├── metadataExtraction.py
     ├── next.config.js
     ├── package.json
     ├── postcss.config.js
@@ -12,8 +13,9 @@ Directory structure:
     │   ├── globals.css
     │   ├── layout.jsx
     │   ├── page.jsx
-    │   ├── about/
-    │   │   └── page.jsx
+    │   ├── api/
+    │   │   └── search/
+    │   │       └── route.js
     │   ├── archives/
     │   │   └── page.jsx
     │   ├── categories/
@@ -23,18 +25,28 @@ Directory structure:
     │   ├── fonts/
     │   │   ├── GeistMonoVF.woff
     │   │   └── GeistVF.woff
-    │   └── post/
-    │       └── [slug]/
-    │           └── page.jsx
+    │   ├── post/
+    │   │   └── [slug]/
+    │   │       └── page.jsx
+    │   └── questions/
+    │       └── page.jsx
     ├── components/
     │   ├── Footer.jsx
     │   ├── Header.jsx
-    │   └── MarkdownRenderer.jsx
+    │   ├── MarkdownRenderer.jsx
+    │   ├── RandomJumpButton.jsx
+    │   └── SearchBar.jsx
+    ├── db/
+    │   └── blog.db
     ├── lib/
+    │   ├── generate-sqlite.js
     │   ├── markdown.js
+    │   ├── search-sqlite.js
     │   └── utils.js
-    └── public/
-        └── images/
+    ├── public/
+    │   └── images/
+    └── scipts/
+        └── init-db.js
 
 ================================================
 File: README.md
@@ -97,7 +109,7 @@ File: components.json
   "rsc": true,
   "tsx": false,
   "tailwind": {
-    "config": "tailwind.config.ts",
+    "config": "tailwind.config.js",
     "css": "app/globals.css",
     "baseColor": "neutral",
     "cssVariables": true,
@@ -128,13 +140,113 @@ File: jsconfig.json
 
 
 ================================================
+File: metadataExtraction.py
+================================================
+import re
+
+def extract_problems_from_markdown(file_path, start_id):
+    with open(file_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    # 匹配二级标题及其后的标签行
+    pattern = r'##\s+([^\n]+)\n\n([^\n]+)'
+    matches = re.findall(pattern, content)
+    
+    problems = []
+    problem_id = start_id  # 从12开始，根据示例
+    
+    for title, tags_line in matches:
+        # 提取标题作为问题名称
+        problem_name = title.strip()
+        
+        # 处理标签行
+        tags = []
+        # 先提取括号内的内容（如果有）
+        bracket_content = []
+        if '（' in tags_line and '）' in tags_line:
+            bracket_part = tags_line[tags_line.find('（')+1:tags_line.find('）')]
+            bracket_content = [tag.strip() for tag in bracket_part.split('，')]
+            # 移除括号及其内容，保留前面的部分
+            tags_line = tags_line[:tags_line.find('（')].strip()
+        
+        # 处理括号前的标签（如果有）
+        if tags_line:
+            tags.extend([tag.strip() for tag in tags_line.split('，')])
+        
+        # 添加括号内的标签
+        tags.extend(bracket_content)
+        
+        # 创建问题字典
+        problem = {
+            'id': str(problem_id),
+            'name': problem_name,
+            'tags': tags
+        }
+        problems.append(problem)
+        problem_id += 1
+    
+    return problems
+
+def generate_metadata(problems):
+    metadata = '---\nproblems:\n'
+    for problem in problems:
+        metadata += f'  - id: "{problem["id"]}"\n'
+        metadata += f'    name: "{problem["name"]}"\n'
+        tags_str = ', '.join(f'"{tag}"' for tag in problem['tags'])
+        metadata += f'    tags: [{tags_str}]\n'
+    metadata += '---\n'
+    return metadata
+
+def process_markdown_file(input_file, output_file, start_id):
+    problems = extract_problems_from_markdown(input_file, start_id)
+    metadata = generate_metadata(problems)
+    
+    with open(input_file, 'r', encoding='utf-8') as f:
+        original_content = f.read()
+    
+    output_content = metadata + '\n' + original_content
+    
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write(output_content)
+
+# 使用示例
+input_file = '刷题日记25-03-14.md'
+output_file = 'output.md'
+start_id = 53
+process_markdown_file(input_file, output_file, start_id)
+
+
+================================================
 File: next.config.js
 ================================================
+// next.config.js
+const webpack = require('webpack');
+
 module.exports = {
-    
-  };
-  
-  
+  webpack: (config, { isServer }) => {
+    // 排除二进制文件和HTML文件
+    config.plugins.push(
+      new webpack.IgnorePlugin({
+        resourceRegExp: /\.(node|html)$/,
+        contextRegExp: /node-pre-gyp|nodejieba/
+      })
+    );
+
+    // 客户端构建排除Node.js模块
+    if (!isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        'nodejieba': false,
+        'sqlite3': false
+      };
+    }
+
+    return config;
+  },
+  experimental: {
+    serverComponentsExternalPackages: ['nodejieba', 'sqlite3', '@mapbox/node-pre-gyp']
+  }
+};
 
 
 ================================================
@@ -145,17 +257,24 @@ File: package.json
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "postcss": "postcss app/globals.css -o app/output.css"
+    "dev": "cross-env NODE_OPTIONS=\"--experimental-json-modules --unhandled-rejections=strict\" next dev",
+    "build": "npm run db:init && next build",
+    "db:init": "node scripts/init-db.js",
+    "db:reset": "rimraf db/blog.db* && npm run db:init"
+  },
+  "browser": {
+    "nodejieba": false,
+    "sqlite3": false,
+    "@mapbox/node-pre-gyp": false
   },
   "dependencies": {
     "gray-matter": "^4.0.3",
+    "jieba": "^1.0.0",
     "katex": "^0.16.21",
     "lucide-react": "^0.294.0",
     "next": "14.0.4",
+    "nodejieba": "^3.4.4",
+    "prismjs": "^1.30.0",
     "react": "^18",
     "react-dom": "^18",
     "rehype-katex": "^7.0.1",
@@ -168,6 +287,7 @@ File: package.json
     "remark-math": "^6.0.0",
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.0.0",
+    "sqlite3": "^5.1.7",
     "tailwindcss-animate": "^1.0.7",
     "unified": "^11.0.4",
     "unist-util-visit": "^5.0.0"
@@ -175,6 +295,7 @@ File: package.json
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.16",
     "autoprefixer": "^10.4.15",
+    "cross-env": "^7.0.3",
     "eslint": "^8",
     "eslint-config-next": "14.0.4",
     "postcss": "^8.4.31",
@@ -302,7 +423,11 @@ module.exports = {
 File: .eslintrc.json
 ================================================
 {
-  "extends": ["next/core-web-vitals", "next/typescript"]
+  "extends": ["next/core-web-vitals"],
+  "rules": {
+    "@next/next/no-img-element": "off", // 禁用 <img> 警告
+    "react/no-unescaped-entities": "warn" // 将未转义实体降为警告
+  }
 }
 
 
@@ -313,7 +438,7 @@ File: app/globals.css
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+@import "prismjs/themes/prism-okaidia.css";
 :root {
   --foreground: 51, 51, 51;
   --background: 250, 248, 245;
@@ -380,7 +505,7 @@ body {
   }
 
   .markdown-content code {
-    @apply font-mono text-sm;
+    @apply font-mono text-xs;
   }
 
   .markdown-content :not(pre) > code {
@@ -787,6 +912,66 @@ body {
   }
 }
 
+.article-card .aspect-video {
+  position: relative;
+  overflow: hidden;
+}
+
+.article-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.article-card:hover img {
+  transform: scale(1.05);
+}
+
+.article-card .bg-gradient-to-t {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+button.rounded-lg {
+  border-radius: 0.5rem !important;
+}
+
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes fadeDown {
+  from { 
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease-out forwards;
+}
+
+.animate-fadeDown {
+  animation: fadeDown 0.2s ease-out forwards;
+}
+
 }
 
 
@@ -976,67 +1161,41 @@ export default async function Page() {
 
 
 ================================================
-File: app/about/page.jsx
+File: app/api/search/route.js
 ================================================
-import MarkdownRenderer from "@/components/MarkdownRenderer";
-import { getPostData } from "@/lib/markdown";
+// app/api/search/route.js
+import { searchPosts } from "@/lib/search-sqlite";
+import { NextResponse } from 'next/server';
 
-export async function generateMetadata() {
-  return {
-    title: "About - Garhlz's Blog",
-  };
-}
+// 允许的搜索字符正则表达式
+const SAFE_SEARCH_REGEX = /[\p{L}\p{N}\s'\-_]/gu;
 
-export default async function About() {
-  let postData;
-
+export async function GET(request) {
   try {
-    postData = await getPostData("about");
+    const { searchParams } = new URL(request.url);
+    let query = searchParams.get("q") || "";
+
+    // 清理危险字符并截断长度
+    query = query.match(SAFE_SEARCH_REGEX)?.join("") || "";
+    query = query.slice(0, 100).trim();
+
+    if (!query) {
+      return NextResponse.json(
+        { error: "请输入有效的搜索词" },
+        { status: 400 }
+      );
+    }
+
+    const results = await searchPosts(query);
+    return NextResponse.json(results);
+
   } catch (error) {
-    console.error("Error loading about page:", error);
-    postData = {
-      content: `
-# About Me
-
-This is a default About page. It seems the custom \`about.md\` file could not be loaded. Please check the content directory or update this page.
-
----
-
-### Basic Info
-- **Name**: Garhlz  
-- **Bio**: 还没来得及写简介，别急，慢慢来！  
-
-### Contact
-- **Email**: [garhlz257@163.com](mailto:garhlz257@163.com)  
-- **GitHub**: [github.com/garhlz](https://github.com/garhlz)  
-      `,
-    };
+    console.error('搜索 API 错误:', error);
+    return NextResponse.json(
+      { error: "服务器处理搜索请求时出错" },
+      { status: 500 }
+    );
   }
-
-  return (
-    <div className="max-w-4xl mx-auto mt-12 px-4 sm:px-6 lg:px-8">
-      {/* 标题区域 */}
-      <header className="mb-8 text-center">
-        <h1 className="text-3xl font-extrabold text-gray-800 sm:text-5xl tracking-tight">
-          About Me
-        </h1>
-      </header>
-
-      {/* 主内容区域 */}
-      <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8">
-        {/* 头像占位符 */}
-        <div className="flex justify-center mb-6">
-          <img src="/images/avatar1.jpg" alt="Garhlz's Avatar" className="w-24 h-24 rounded-full object-cover" />
-        </div>
-
-        {/* Markdown 内容 */}
-        <div className="prose prose-lg max-w-none text-gray-800">
-          <MarkdownRenderer content={postData.content} />
-        </div>
-      </div>
-
-    </div>
-  );
 }
 
 
@@ -1442,42 +1601,228 @@ File: app/fonts/GeistVF.woff
 File: app/post/[slug]/page.jsx
 ================================================
 import Link from "next/link";
-import { ArrowLeft, Calendar, Clock, Tag } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, Tag, BookOpen } from "lucide-react";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import { getPostData } from "@/lib/markdown";
+import { unified } from "unified";
+import remarkParse from "remark-parse";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import remarkRehype from "remark-rehype";
+import rehypeRaw from "rehype-raw";
+import rehypePrism from "rehype-prism-plus";
+import rehypeKatex from "rehype-katex";
+import rehypeStringify from "rehype-stringify";
+import { visit } from "unist-util-visit";
+
+const difficultyTagStyles = {
+  "深黄": "bg-amber-600 text-white hover:bg-amber-700",
+  "黄": "bg-yellow-500 text-black hover:bg-yellow-600",
+  "绿": "bg-emerald-500 text-white hover:bg-emerald-600",
+  "蓝": "bg-blue-500 text-white hover:bg-blue-600",
+  "紫": "bg-purple-500 text-white hover:bg-purple-600",
+  "黑": "bg-gray-800 text-white hover:bg-gray-900",
+  "default": "bg-gray-100 text-gray-800 hover:bg-gray-200",
+};
+
+const isNumeric = (str) => /^\d+$/.test(str);
+
+const getTagStyle = (tag) => {
+  if (difficultyTagStyles[tag]) return difficultyTagStyles[tag];
+  if (isNumeric(tag)) return difficultyTagStyles.default;
+  return "bg-secondary/10 text-secondary hover:bg-secondary/20";
+};
+
+function extractHeadings() {
+  return (tree, file) => {
+    const headings = [];
+    visit(tree, "heading", (node) => {
+      // 防御性检查
+      if (!node || !Array.isArray(node.children)) {
+        console.warn("Invalid heading node:", node);
+        return;
+      }
+      const text = node.children
+        .filter((n) => n && n.type === "text" && typeof n.value === "string")
+        .map((n) => n.value)
+        .join("");
+      if (!text) return; // 跳过空标题
+      const id = text.toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]+/g, ""); // 不添加后缀
+      node.data = node.data || {};
+      node.data.hProperties = node.data.hProperties || {};
+      node.data.hProperties.id = id;
+      headings.push({ depth: node.depth, text, id });
+    });
+    file.data.headings = headings;
+  };
+}
+
+export async function generateStaticParams() {
+  const { getMarkdownFiles } = require("@/lib/markdown");
+  const filenames = await getMarkdownFiles();
+  return filenames.map((filename) => ({
+    slug: filename.replace(".md", ""),
+  }));
+}
 
 export async function generateMetadata({ params }) {
   const { slug } = params;
-  let postData;
-
   try {
-    postData = await getPostData(slug);
+    const postData = await getPostData(slug);
     return {
-      title: `${postData.title} - Garhlz's blog`,
+      title: `${postData.title} - Garhlz's Blog`,
       description: postData.excerpt || `探索${postData.title}的深度解析`,
     };
   } catch (error) {
-    return {
-      title: "文章未找到 - Garhlz's blog",
-    };
+    return { title: "文章未找到 - Garhlz's Blog" };
   }
 }
 
 export default async function Post({ params }) {
   const { slug } = params;
-  let postData;
 
   try {
-    postData = await getPostData(slug);
-  } catch (error) {
+    const postData = await getPostData(slug);
+    if (!postData || !postData.content) {
+      throw new Error("文章内容为空或未找到");
+    }
+
+    const vfile = await unified()
+      .use(remarkParse)
+      .use(extractHeadings)
+      .use(remarkGfm)
+      .use(remarkMath)
+      .use(remarkRehype, { allowDangerousHtml: true })
+      .use(rehypeRaw)
+      .use(rehypePrism, { showLineNumbers: true, ignoreMissing: true })
+      .use(rehypeKatex, { strict: false })
+      .use(rehypeStringify)
+      .process(postData.content);
+
+    let htmlContent = String(vfile);
+    const headings = vfile.data.headings || [];
+
+    if (postData.problems && Array.isArray(postData.problems)) {
+      postData.problems.forEach((problem) => {
+        const headingRegex = new RegExp(`<h2[^>]*>${problem.name}</h2>`, "i");
+        const tagsHtml = (problem.tags || [])
+          .map(
+            (tag) => {
+              const tagStyle = getTagStyle(tag);
+              return `<a href="/questions?tag=${encodeURIComponent(
+                tag
+              )}" class="inline-block px-2.5 py-1 ${tagStyle} rounded-full text-xs font-medium transition-colors ml-2">${tag}</a>`;
+            }
+          )
+          .join("");
+        const problemIdHtml = problem.id
+          ? `<span class="font-mono text-xs bg-secondary/10 text-secondary px-2 py-1 rounded-md ml-3">${problem.id}</span>`
+          : "";
+        const problemId = problem.name.toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]+/g, "");
+        htmlContent = htmlContent.replace(
+          headingRegex,
+          `<h2 id="${problemId}" class="flex items-center flex-wrap gap-2">
+            <span>${problem.name}</span>
+            ${problemIdHtml}
+            <div class="flex flex-wrap gap-1 mt-2 sm:mt-0">${tagsHtml}</div>
+          </h2>`
+        );
+      });
+    }
+
     return (
-      <div className="container mx-auto p-4 min-h-screen flex items-center justify-center">
-        <div className="bg-red-50/90 backdrop-blur-sm border-2 border-red-100 rounded-xl p-6 max-w-md text-center shadow-lg">
-          <h1 className="text-2xl font-bold text-red-600 mb-3">🚨 文章加载失败</h1>
-          <p className="text-red-500 mb-4">{error.message}</p>
-          <Link 
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-4xl mx-auto">
+          <Link
             href="/"
-            className="inline-flex items-center justify-center space-x-2 bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg transition-all duration-200"
+            className="inline-flex items-center text-gray-600 hover:text-primary mb-6 group transition-colors duration-200"
+          >
+            <ArrowLeft className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
+            <span className="text-sm font-medium">返回文章列表</span>
+          </Link>
+
+          <header className="mb-8 bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight sm:text-4xl mb-4">
+              {postData.title}
+            </h1>
+            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 border-b border-gray-100 pb-4 mb-4">
+              <div className="flex items-center space-x-1.5">
+                <Calendar className="h-4 w-4 flex-shrink-0 text-gray-400" />
+                <time>{postData.date}</time>
+              </div>
+              <div className="hidden sm:block text-gray-300">•</div>
+              <div className="flex items-center space-x-1.5">
+                <Clock className="h-4 w-4 flex-shrink-0 text-gray-400" />
+                <span>{postData.readingTime} 分钟阅读</span>
+              </div>
+              {postData.problems && postData.problems.length > 0 && (
+                <>
+                  <div className="hidden sm:block text-gray-300">•</div>
+                  <div className="flex items-center space-x-1.5">
+                    <BookOpen className="h-4 w-4 flex-shrink-0 text-gray-400" />
+                    <span>{postData.problems.length} 道题目</span>
+                  </div>
+                </>
+              )}
+            </div>
+            {postData.categories && postData.categories.length > 0 && (
+              <div className="flex items-start gap-2 flex-wrap">
+                <Tag className="h-4 w-4 text-gray-500 mt-1.5" />
+                <div className="flex flex-wrap gap-2">
+                  {postData.categories.map((category) => (
+                    <Link
+                      key={category}
+                      href={`/categories/${category}`}
+                      className="px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm hover:bg-primary/20 transition-colors font-medium"
+                    >
+                      {category}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+            {postData.excerpt && (
+              <div className="mt-4 text-gray-600 italic pl-4 py-2 border-l-4 border-secondary/30">
+                {postData.excerpt}
+              </div>
+            )}
+          </header>
+
+          <article className="bg-white rounded-xl shadow-sm p-6 sm:p-8 md:p-10 mb-8">
+            <MarkdownRenderer htmlContent={htmlContent} headings={headings} />
+          </article>
+
+          <div className="border-t border-gray-100 pt-8 pb-16 flex justify-between items-center">
+            <Link
+              href="/"
+              className="inline-flex items-center space-x-2 text-gray-600 hover:text-primary transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5" />
+              <span className="font-medium">浏览更多文章</span>
+            </Link>
+            {postData.problems && postData.problems.length > 0 && (
+              <Link
+                href="/questions"
+                className="inline-flex items-center space-x-2 bg-secondary text-white px-4 py-2 rounded-lg hover:bg-secondary/90 transition-colors"
+              >
+                <BookOpen className="h-4 w-4" />
+                <span className="font-medium">查看题库</span>
+              </Link>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  } catch (error) {
+    console.error("Error rendering post:", error);
+    return (
+      <div className="container mx-auto p-4 min-h-[80vh] flex items-center justify-center">
+        <div className="bg-red-50 border-2 border-red-100 rounded-xl p-8 max-w-md text-center shadow-lg">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">🚨 文章加载失败</h1>
+          <p className="text-red-500 mb-6">{error.message || "未知错误"}</p>
+          <Link
+            href="/"
+            className="inline-flex items-center justify-center space-x-2 bg-red-100 hover:bg-red-200 text-red-700 px-5 py-3 rounded-lg transition-all duration-200 font-medium"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>返回首页</span>
@@ -1486,81 +1831,296 @@ export default async function Post({ params }) {
       </div>
     );
   }
+}
+
+
+================================================
+File: app/questions/page.jsx
+================================================
+import Link from "next/link";
+import { ArrowLeft, Tag, BookOpen, Filter } from "lucide-react";
+import { getMarkdownFiles, getPostMetadata } from "../../lib/markdown";
+import RandomJumpButton from "@/components/RandomJumpButton"; // 新增导入
+
+// 定义颜色相关的难度标签及其对应的样式
+const difficultyTagStyles = {
+  深黄: "bg-amber-600 text-white hover:bg-amber-700",
+  黄: "bg-yellow-500 text-white hover:bg-yellow-600",
+  绿: "bg-emerald-500 text-white hover:bg-emerald-600",
+  蓝: "bg-blue-500 text-white hover:bg-blue-600",
+  紫: "bg-purple-500 text-white hover:bg-purple-600",
+  黑: "bg-gray-800 text-white hover:bg-gray-900",
+  default: "bg-gray-100 text-gray-800 hover:bg-gray-200",
+};
+
+const isNumeric = (str) => /^\d+$/.test(str);
+
+const getDifficultyTagStyle = (tag) => {
+  if (difficultyTagStyles[tag]) {
+    return difficultyTagStyles[tag];
+  }
+  return difficultyTagStyles.default;
+};
+
+async function getAllProblems(tagFilter = null) {
+  try {
+    const filenames = await getMarkdownFiles();
+    const posts = await Promise.all(
+      filenames.map(async (filename) => {
+        try {
+          return await getPostMetadata(filename);
+        } catch (error) {
+          console.error(`Error parsing ${filename}:`, error);
+          return null;
+        }
+      })
+    );
+
+    const validPosts = posts.filter((post) => post !== null && post.problems.length > 0);
+    const problems = [];
+
+    validPosts.forEach((post) => {
+      post.problems.forEach((problem) => {
+        if (!tagFilter || problem.tags.includes(tagFilter)) {
+          problems.push({
+            slug: post.slug,
+            postTitle: post.title,
+            problemId: problem.id,
+            problemName: problem.name,
+            date: post.date,
+            tags: problem.tags,
+          });
+        }
+      });
+    });
+
+    return problems.sort((a, b) => new Date(b.date) - new Date(a.date));
+  } catch (error) {
+    console.error("Error fetching problems:", error);
+    return [];
+  }
+}
+
+async function getAllTags() {
+  try {
+    const filenames = await getMarkdownFiles();
+    const posts = await Promise.all(
+      filenames.map(async (filename) => {
+        try {
+          return await getPostMetadata(filename);
+        } catch (error) {
+          console.error(`Error parsing ${filename}:`, error);
+          return null;
+        }
+      })
+    );
+
+    const validPosts = posts.filter((post) => post !== null && post.problems.length > 0);
+    const tagsSet = new Set();
+
+    validPosts.forEach((post) => {
+      post.problems.forEach((problem) => {
+        problem.tags.forEach((tag) => tagsSet.add(tag));
+      });
+    });
+
+    const allTags = Array.from(tagsSet);
+    const typeTags = allTags
+      .filter((tag) => !isNumeric(tag) && !Object.keys(difficultyTagStyles).includes(tag))
+      .sort();
+    const difficultyTags = allTags
+      .filter((tag) => isNumeric(tag) || Object.keys(difficultyTagStyles).includes(tag))
+      .sort((a, b) => {
+        if (isNumeric(a) && isNumeric(b)) return Number(a) - Number(b);
+        if (isNumeric(a)) return -1;
+        if (isNumeric(b)) return 1;
+        const colorOrder = ["深黄", "黄", "绿", "蓝", "紫", "黑"];
+        return colorOrder.indexOf(a) - colorOrder.indexOf(b);
+      });
+
+    return { typeTags, difficultyTags };
+  } catch (error) {
+    console.error("Error fetching tags:", error);
+    return { typeTags: [], difficultyTags: [] };
+  }
+}
+
+export async function generateMetadata({ searchParams }) {
+  const tag = searchParams.tag ? decodeURIComponent(searchParams.tag) : null;
+  return {
+    title: tag ? `${tag} 题目 - Garhlz's Blog` : "题库 - Garhlz's Blog",
+    description: `浏览${tag ? `${tag} 相关的` : "所有"}算法题目`,
+  };
+}
+
+export default async function QuestionsPage({ searchParams }) {
+  const tagFilter = searchParams.tag ? decodeURIComponent(searchParams.tag) : null;
+  const problems = await getAllProblems(tagFilter);
+  const { typeTags, difficultyTags } = await getAllTags();
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="max-w-4xl mx-auto">
-        {/* 返回按钮 */}
-        <Link 
-          href="/" 
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <header className="mb-10">
+        <Link
+          href="/"
           className="inline-flex items-center text-gray-600 hover:text-primary mb-6 group transition-colors duration-200"
         >
-          <ArrowLeft className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform" />
-          <span className="text-sm font-medium">返回文章列表</span>
+          <ArrowLeft className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
+          <span className="text-sm font-medium">返回首页</span>
         </Link>
+        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight sm:text-4xl flex items-center">
+          <BookOpen className="h-8 w-8 mr-3 text-secondary" />
+          {tagFilter ? `${tagFilter} 题目` : "题库"}
+        </h1>
+        <p className="mt-3 text-lg text-gray-600">
+          共 <span className="font-semibold text-secondary">{problems.length}</span> 道题目
+        </p>
 
-        {/* 文章头部 */}
-        <header className="mb-8 space-y-4">
-          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight sm:text-4xl">
-            {postData.title}
-          </h1>
-
-          {/* 元信息 */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4 text-sm text-gray-500">
-            <div className="flex items-center space-x-1">
-              <Calendar className="h-4 w-4 flex-shrink-0" />
-              <time>{postData.date}</time>
-            </div>
-            <div className="hidden sm:block">•</div>
-            <div className="flex items-center space-x-1">
-              <Clock className="h-4 w-4 flex-shrink-0" />
-              <span>{postData.readingTime} 分钟阅读</span>
+        {/* 筛选器 */}
+        <div className="mt-8 space-y-6 bg-gray-50 p-6 rounded-xl shadow-sm border border-gray-100">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+              <Tag className="h-5 w-5 mr-2 text-secondary" />
+              题型
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href="/questions"
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
+                  !tagFilter
+                    ? "bg-secondary text-white shadow-md shadow-secondary/20 transform scale-105"
+                    : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:border-secondary/30"
+                }`}
+              >
+                全部
+              </Link>
+              {typeTags.map((tag) => (
+                <Link
+                  key={tag}
+                  href={`/questions?tag=${encodeURIComponent(tag)}`}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
+                    tagFilter === tag
+                      ? "bg-secondary text-white shadow-md shadow-secondary/20 transform scale-105"
+                      : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:border-secondary/30"
+                  }`}
+                >
+                  {tag}
+                </Link>
+              ))}
             </div>
           </div>
 
-          {/* 分类标签 */}
-          {postData.categories?.length > 0 && (
-            <div className="flex items-start gap-2 flex-wrap">
-              <Tag className="h-4 w-4 text-gray-500 mt-1" />
-              <div className="flex flex-wrap gap-2">
-                {postData.categories.map((category) => (
-                  <Link
-                    key={category}
-                    href={`/categories/${category}`}
-                    className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm hover:bg-primary/20 transition-colors"
-                  >
-                    #{category}
-                  </Link>
-                ))}
-              </div>
+          <div>
+            <h2 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+              <Filter className="h-5 w-5 mr-2 text-secondary" />
+              难度
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {difficultyTags.map((tag) => (
+                <Link
+                  key={tag}
+                  href={`/questions?tag=${encodeURIComponent(tag)}`}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
+                    tagFilter === tag ? "transform scale-105 shadow-md" : ""
+                  } ${
+                    tagFilter === tag
+                      ? Object.keys(difficultyTagStyles).includes(tag)
+                        ? difficultyTagStyles[tag]
+                        : difficultyTagStyles.default
+                      : Object.keys(difficultyTagStyles).includes(tag)
+                        ? difficultyTagStyles[tag].replace("bg-", "bg-opacity-80 bg-")
+                        : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                  }`}
+                >
+                  {tag}
+                </Link>
+              ))}
             </div>
-          )}
-        </header>
-
-        {/* 内容区域 */}
-        <article className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm p-6 sm:p-8 md:p-10 mb-8">
-          <MarkdownRenderer 
-            content={postData.content} 
-            className="prose prose-sm sm:prose-base max-w-none 
-              prose-headings:font-semibold
-              prose-a:text-primary hover:prose-a:underline
-              prose-blockquote:border-l-4 prose-blockquote:border-primary/50
-              prose-code:before:content-none prose-code:after:content-none
-              prose-code:bg-gray-100 prose-code:px-2 prose-code:py-1 prose-code:rounded"
-          />
-        </article>
-
-        {/* 底部导航 */}
-        <div className="border-t border-gray-100 pt-8">
-          <Link
-            href="/"
-            className="inline-flex items-center space-x-2 text-gray-600 hover:text-primary transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5" />
-            <span className="font-medium">浏览更多文章</span>
-          </Link>
+          </div>
         </div>
-      </div>
+
+        {/* 添加随机跳题按钮 */}
+        <div className="mt-6 flex items-center gap-4">
+          {tagFilter && (
+            <Link
+              href="/questions"
+              className="inline-flex items-center text-secondary hover:text-secondary/80 transition-colors font-medium"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              查看所有题目
+            </Link>
+          )}
+          <RandomJumpButton problems={problems} />
+        </div>
+      </header>
+
+      <section className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+        {problems.length === 0 ? (
+          <div className="text-center py-12">
+            <BookOpen className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900">暂无题目</h3>
+            <p className="text-gray-600 mt-2">
+              {tagFilter ? `当前标签 "${tagFilter}" 下没有相关题目` : "题库为空"}
+            </p>
+            <Link
+              href="/questions"
+              className="mt-6 inline-block px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors"
+            >
+              返回所有题目
+            </Link>
+          </div>
+        ) : (
+          <ul className="divide-y divide-gray-100">
+            {problems.map((problem) => (
+              <li
+                key={problem.problemId}
+                className="group hover:bg-gray-50 transition-colors duration-200 rounded-lg"
+              >
+                <Link
+                  href={`/post/${problem.slug}#${problem.problemName
+                    .toLowerCase()
+                    .replace(/\s+/g, "-")}`}
+                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4"
+                >
+                  <div className="flex items-center">
+                    <span className="font-mono text-xs bg-secondary/10 text-secondary px-2 py-1 rounded-md mr-3">
+                      {problem.problemId}
+                    </span>
+                    <h4 className="text-base font-medium text-gray-900 group-hover:text-secondary transition-colors">
+                      {problem.problemName}
+                      <span className="text-gray-500 text-sm ml-2 font-normal">
+                        from {problem.postTitle}
+                      </span>
+                    </h4>
+                  </div>
+                  <time className="text-sm text-gray-500 mt-2 sm:mt-0 sm:ml-4 sm:w-28 sm:text-right">
+                    {problem.date}
+                  </time>
+                </Link>
+                {problem.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-1 px-4 pb-4">
+                    {problem.tags.map((tag) => (
+                      <Link
+                        key={tag}
+                        href={`/questions?tag=${encodeURIComponent(tag)}`}
+                        className={`text-xs px-2 py-1 rounded-full transition-colors ${
+                          Object.keys(difficultyTagStyles).includes(tag)
+                            ? difficultyTagStyles[tag].replace("bg-", "bg-opacity-90 bg-")
+                            : isNumeric(tag)
+                              ? "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                              : "bg-secondary/10 text-secondary hover:bg-secondary/20"
+                        }`}
+                      >
+                        {tag}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }
@@ -1589,8 +2149,8 @@ export default function Footer() {
             <Link href="/archives" className="text-gray-600 hover:text-primary transition-colors">
               褰掓。
             </Link>
-            <Link href="/about" className="text-gray-600 hover:text-primary transition-colors">
-              鍏充簬
+            <Link href="/questions" className="text-gray-600 hover:text-primary transition-colors">
+              棰樺簱
             </Link>
           </div>
         </div>
@@ -1605,153 +2165,227 @@ export default function Footer() {
 ================================================
 File: components/Header.jsx
 ================================================
-"use client" 
+"use client";
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { Home, User, Archive, Tag, Github, Twitter } from "lucide-react"
+import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import {
+  Home,
+  Archive,
+  Tag,
+  Github,
+  Twitter,
+  BookOpen,
+  Menu,
+  X,
+  Search,
+} from "lucide-react";
+import SearchBar from "./SearchBar";
 
 export default function Header() {
-  const [scrolled, setScrolled] = useState(false)
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const menuRef = useRef(null);
+  const searchRef = useRef(null);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 10)
-    }
+    const handleScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", handleScroll);
 
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(false);
+      }
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setMobileSearchOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (menuOpen || mobileSearchOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [menuOpen, mobileSearchOpen]);
+
+  const NavLinks = ({ mobile = false, onClick = () => {} }) => (
+    <>
+      <Link
+        href="/"
+        className={`flex items-center space-x-2 text-gray-600 hover:text-primary transition-all duration-200 ${
+          mobile ? "text-lg w-full justify-center py-4 hover:bg-gray-50" : ""
+        }`}
+        onClick={onClick}
+      >
+        <Home className={mobile ? "h-5 w-5" : "h-4 w-4"} />
+        <span>首页</span>
+      </Link>
+      <Link
+        href="/categories"
+        className={`flex items-center space-x-2 text-gray-600 hover:text-primary transition-all duration-200 ${
+          mobile ? "text-lg w-full justify-center py-4 hover:bg-gray-50" : ""
+        }`}
+        onClick={onClick}
+      >
+        <Tag className={mobile ? "h-5 w-5" : "h-4 w-4"} />
+        <span>分类</span>
+      </Link>
+      <Link
+        href="/archives"
+        className={`flex items-center space-x-2 text-gray-600 hover:text-primary transition-all duration-200 ${
+          mobile ? "text-lg w-full justify-center py-4 hover:bg-gray-50" : ""
+        }`}
+        onClick={onClick}
+      >
+        <Archive className={mobile ? "h-5 w-5" : "h-4 w-4"} />
+        <span>归档</span>
+      </Link>
+      <Link
+        href="/questions"
+        className={`flex items-center space-x-2 text-gray-600 hover:text-primary transition-all duration-200 ${
+          mobile ? "text-lg w-full justify-center py-4 hover:bg-gray-50" : ""
+        }`}
+        onClick={onClick}
+      >
+        <BookOpen className={mobile ? "h-5 w-5" : "h-4 w-4"} />
+        <span>题库</span>
+      </Link>
+    </>
+  );
+
+  const SocialLinks = ({ mobile = false }) => (
+    <div
+      className={`flex items-center ${
+        mobile ? "space-x-8 mt-6" : "space-x-4"
+      }`}
+    >
+      <a
+        href="https://github.com/garhlz"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-gray-600 hover:text-primary transition-colors"
+        aria-label="GitHub"
+      >
+        <Github className={mobile ? "h-6 w-6" : "h-5 w-5"} />
+      </a>
+      <a
+        href="https://twitter.com/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-gray-600 hover:text-primary transition-colors"
+        aria-label="Twitter"
+      >
+        <Twitter className={mobile ? "h-6 w-6" : "h-5 w-5"} />
+      </a>
+    </div>
+  );
 
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? "bg-header-bg shadow-md py-2" : "bg-header-bg py-4"
+        scrolled ? "bg-white shadow-sm py-2" : "bg-white py-3"
       }`}
     >
       <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row md:items-center">
-          {/* 第一行：标题居中，社交链接靠右（移动端） / 标题靠左（桌面端） */}
-          <div className="flex justify-between items-center w-full">
-            {/* 移动端左侧留空，桌面端不需要 */}
-            <div className="w-12 md:hidden"></div>
-            
-            {/* 标题：移动端居中，桌面端靠左 */}
-            <div className="flex-1 flex justify-center md:justify-start">
-              <Link href="/" className="text-xl md:text-xl font-bold text-gray-800 hover:text-primary transition-colors">
-                Garhlz's Blog
-              </Link>
-            </div>
-            
-            {/* 社交链接在移动端显示，桌面端隐藏 */}
-            <div className="flex items-center space-x-4 md:hidden w-12 justify-end">
-              <a
-                href="https://github.com/garhlz"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-600 hover:text-primary transition-colors"
-              >
-                <Github className="h-5 w-5" />
-              </a>
-              <a
-                href="https://twitter.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-600 hover:text-primary transition-colors"
-              >
-                <Twitter className="h-5 w-5" />
-              </a>
-            </div>
+        <div className="flex items-center justify-between h-14">
+          {/* 标题 */}
+          <div className="flex-none md:flex-1">
+            <Link
+              href="/"
+              className="text-xl font-bold text-gray-800 hover:text-primary transition-colors"
+            >
+              Garhlz's Blog
+            </Link>
           </div>
 
-          {/* 第二行（移动端导航平均分布占满整行，按钮放大） / 导航+社交链接靠右（桌面端） */}
-          <div className="flex justify-between items-center mt-4 md:mt-0 w-full md:w-auto md:ml-auto">
-            {/* 导航选项 */}
-            <nav className="flex w-full md:w-auto items-center md:space-x-6 whitespace-nowrap">
-              {/* 移动端：均匀分布，添加页边距 */}
-              <div className="flex justify-between w-full px-4 md:hidden">
-                <Link href="/" className="flex flex-col items-center text-gray-600 hover:text-primary transition-colors">
-                  <Home className="h-6 w-6" />
-                  <span className="mt-1 text-sm">首页</span>
-                </Link>
-                <Link
-                  href="/categories"
-                  className="flex flex-col items-center text-gray-600 hover:text-primary transition-colors"
-                >
-                  <Tag className="h-6 w-6" />
-                  <span className="mt-1 text-sm">分类</span>
-                </Link>
-                <Link
-                  href="/archives"
-                  className="flex flex-col items-center text-gray-600 hover:text-primary transition-colors"
-                >
-                  <Archive className="h-6 w-6" />
-                  <span className="mt-1 text-sm">归档</span>
-                </Link>
-                <Link
-                  href="/about"
-                  className="flex flex-col items-center text-gray-600 hover:text-primary transition-colors"
-                >
-                  <User className="h-6 w-6" />
-                  <span className="mt-1 text-sm">关于</span>
-                </Link>
-              </div>
-              
-              {/* 桌面端：水平排列 */}
-              <div className="hidden md:flex md:space-x-6">
-                <Link href="/" className="flex items-center space-x-1 text-gray-600 hover:text-primary transition-colors">
-                  <Home className="h-4 w-4" />
-                  <span>首页</span>
-                </Link>
-                <Link
-                  href="/categories"
-                  className="flex items-center space-x-1 text-gray-600 hover:text-primary transition-colors"
-                >
-                  <Tag className="h-4 w-4" />
-                  <span>分类</span>
-                </Link>
-                <Link
-                  href="/archives"
-                  className="flex items-center space-x-1 text-gray-600 hover:text-primary transition-colors"
-                >
-                  <Archive className="h-4 w-4" />
-                  <span>归档</span>
-                </Link>
-                <Link
-                  href="/about"
-                  className="flex items-center space-x-1 text-gray-600 hover:text-primary transition-colors"
-                >
-                  <User className="h-4 w-4" />
-                  <span>关于</span>
-                </Link>
-              </div>
-            </nav>
+          {/* 桌面端：搜索栏 */}
+          <div className="hidden md:block flex-1 max-w-md mx-4">
+            <SearchBar />
+          </div>
 
-            {/* 社交链接仅在桌面端显示，紧随导航 */}
-            <div className="hidden md:flex items-center space-x-4 ml-6">
-              <a
-                href="https://github.com/garhlz"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-600 hover:text-primary transition-colors"
+          {/* 桌面端：导航和社交链接 */}
+          <nav className="hidden md:flex items-center space-x-6 flex-1 justify-end">
+            <NavLinks />
+            <div className="h-6 w-px bg-gray-200 mx-2" />
+            <SocialLinks />
+          </nav>
+
+          {/* 移动端：搜索按钮和汉堡菜单 */}
+          <div className="md:hidden flex items-center space-x-2">
+            <button
+              onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
+              className="p-2 text-gray-600 hover:text-primary hover:bg-gray-100 rounded-full transition-colors"
+              aria-label="Toggle search"
+            >
+              <Search className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="p-2 text-gray-600 hover:text-primary hover:bg-gray-100 rounded-full transition-colors"
+              aria-label="Toggle menu"
+            >
+              {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
+        </div>
+
+        {/* 移动端：搜索栏 */}
+        {mobileSearchOpen && (
+          <div ref={searchRef} className="md:hidden py-3 border-t border-gray-100 animate-fadeDown">
+            <SearchBar autoFocus={true} onSearch={() => setMobileSearchOpen(false)} />
+          </div>
+        )}
+      </div>
+
+      {/* 移动端：折叠导航菜单 */}
+      {menuOpen && (
+        <div className="md:hidden fixed inset-0 z-50">
+          <div
+            className="absolute inset-0 bg-black/70 animate-fadeIn"
+            onClick={() => setMenuOpen(false)}
+          />
+          <div
+            ref={menuRef}
+            className="relative h-full w-4/5 max-w-xs bg-white shadow-xl animate-slideIn ml-auto"
+          >
+            <div className="flex justify-between items-center p-4 border-b border-gray-100">
+              <Link href="/" className="text-xl font-bold text-gray-800" onClick={() => setMenuOpen(false)}>
+                Garhlz's Blog
+              </Link>
+              <button
+                onClick={() => setMenuOpen(false)}
+                className="p-2 text-gray-600 hover:text-primary hover:bg-gray-100 rounded-full transition-colors"
+                aria-label="Close menu"
               >
-                <Github className="h-5 w-5" />
-              </a>
-              <a
-                href="https://twitter.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-600 hover:text-primary transition-colors"
-              >
-                <Twitter className="h-5 w-5" />
-              </a>
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <nav className="flex flex-col items-center py-4 divide-y divide-gray-100 w-full">
+              <NavLinks mobile={true} onClick={() => setMenuOpen(false)} />
+            </nav>
+            <div className="border-t border-gray-100 p-6 flex justify-center">
+              <SocialLinks mobile={true} />
             </div>
           </div>
         </div>
-      </div>
+      )}
     </header>
-  )
+  );
 }
+
 
 
 ================================================
@@ -1760,167 +2394,149 @@ File: components/MarkdownRenderer.jsx
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { unified } from "unified";
-import remarkParse from "remark-parse";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-import remarkRehype from "remark-rehype";
-import rehypeRaw from "rehype-raw";
-import rehypePrism from "rehype-prism-plus";
-import rehypeKatex from "rehype-katex";
-import rehypeStringify from "rehype-stringify";
-import { visit } from "unist-util-visit";
 import "katex/dist/katex.min.css";
 
-function extractHeadings() {
-  return (tree, file) => {
-    const headings = [];
-    const idCounts = new Map();
-    visit(tree, "heading", (node) => {
-      const text = node.children
-        .filter((n) => n.type === "text")
-        .map((n) => n.value)
-        .join("");
-      let id = text
-        .toLowerCase()
-        .replace(/\s+/g, "-")
-        .replace(/[^\w-]+/g, "");
-      if (idCounts.has(id)) {
-        const count = idCounts.get(id) + 1;
-        idCounts.set(id, count);
-        id = `${id}-${count}`;
-      } else {
-        idCounts.set(id, 0);
-      }
-      node.data = node.data || {};
-      node.data.hProperties = node.data.hProperties || {};
-      node.data.hProperties.id = id;
-      headings.push({ depth: node.depth, text, id });
-    });
-    file.data.headings = headings;
-  };
-}
-
-const MarkdownRenderer = ({ content }) => {
-  const [htmlContent, setHtmlContent] = useState("");
-  const [headings, setHeadings] = useState([]);
-  const [activeHeadingIndex, setActiveHeadingIndex] = useState(0);
+const MarkdownRenderer = ({ htmlContent, headings }) => {
+  const [activeHeadingIndex, setActiveHeadingIndex] = useState(-1);
   const [isTopTocExpanded, setIsTopTocExpanded] = useState(false);
   const sidebarRef = useRef(null);
   const sidebarItemsRef = useRef([]);
   const activeItemRef = useRef(null);
   const progressIndicatorRef = useRef(null);
+  const isScrollingRef = useRef(false);
 
-  // 初始化引用数组
   useEffect(() => {
-    sidebarItemsRef.current = sidebarItemsRef.current.slice(0, headings.length);
+    sidebarItemsRef.current = Array(headings.length).fill(null);
   }, [headings]);
 
   useEffect(() => {
-    const processContent = async () => {
-      try {
-        const vfile = await unified()
-          .use(remarkParse)
-          .use(extractHeadings)
-          .use(remarkGfm)
-          .use(remarkMath)
-          .use(remarkRehype, { allowDangerousHtml: true })
-          .use(rehypeRaw)
-          .use(rehypePrism, { showLineNumbers: true, ignoreMissing: true })
-          .use(rehypeKatex)
-          .use(rehypeStringify)
-          .process(content);
-        setHtmlContent(String(vfile));
-        setHeadings(vfile.data.headings || []);
-      } catch (error) {
-        console.error("Error rendering Markdown:", error);
-        setHtmlContent("<p>渲染文章时出错，请检查 Markdown 格式。</p>");
+    const hash = window.location.hash.slice(1);
+    if (hash) {
+      const targetElement = document.getElementById(hash);
+      if (targetElement) {
+        setTimeout(() => {
+          isScrollingRef.current = true;
+          targetElement.scrollIntoView({ behavior: "smooth" });
+          const index = headings.findIndex((h) => h.id === hash);
+          if (index !== -1) setActiveHeadingIndex(index);
+          setTimeout(() => (isScrollingRef.current = false), 500);
+        }, 100);
       }
-    };
-    processContent();
-  }, [content]);
+    }
+  }, [headings]);
 
   useEffect(() => {
     const updateActiveHeading = () => {
+      if (isScrollingRef.current) return;
+
       const scrollTop = window.scrollY;
-      const headerHeight = 64; // 假设顶部导航栏高度
+      const headerHeight = 80;
 
       const headingElements = headings
         .map((h) => document.getElementById(h.id))
         .filter(Boolean);
 
       if (headingElements.length === 0) {
-        setActiveHeadingIndex(0);
+        setActiveHeadingIndex(-1);
         return;
       }
 
-      let newActiveIndex = 0;
-      for (let i = 0; i < headingElements.length; i++) {
+      let newActiveIndex = -1;
+      for (let i = headingElements.length - 1; i >= 0; i--) {
         const rect = headingElements[i].getBoundingClientRect();
-        if (rect.top + window.scrollY - headerHeight > scrollTop) {
-          if (i > 0) newActiveIndex = i - 1;
+        if (rect.top + window.scrollY - headerHeight <= scrollTop + 10) {
+          newActiveIndex = i;
           break;
         }
-        newActiveIndex = i;
+      }
+      if (newActiveIndex === -1 && scrollTop < headingElements[0].getBoundingClientRect().top + window.scrollY) {
+        newActiveIndex = 0;
       }
 
-      setActiveHeadingIndex(newActiveIndex);
+      if (newActiveIndex !== activeHeadingIndex) {
+        setActiveHeadingIndex(newActiveIndex);
+        if (newActiveIndex >= 0) {
+          const newHash = headings[newActiveIndex].id;
+          window.history.replaceState(null, null, `#${newHash}`);
+        } else {
+          window.history.replaceState(null, null, window.location.pathname);
+        }
+      }
     };
 
     window.addEventListener("scroll", updateActiveHeading);
     updateActiveHeading();
-
     return () => window.removeEventListener("scroll", updateActiveHeading);
-  }, [htmlContent, headings]);
+  }, [headings, activeHeadingIndex]);
 
-  // 在活动标题变化时更新进度条位置
   useEffect(() => {
-    if (activeItemRef.current && progressIndicatorRef.current && sidebarRef.current) {
+    if (
+      activeItemRef.current &&
+      progressIndicatorRef.current &&
+      sidebarRef.current &&
+      activeHeadingIndex >= 0 &&
+      !isScrollingRef.current
+    ) {
       const sidebar = sidebarRef.current;
       const activeItem = activeItemRef.current;
       const progressIndicator = progressIndicatorRef.current;
-      
-      // 计算活动项相对于侧边栏的位置
+
       const activeItemTop = activeItem.offsetTop;
       const activeItemHeight = activeItem.offsetHeight;
-      
-      // 更新进度指示器位置，使其对齐到活动项目
+
       progressIndicator.style.top = `${activeItemTop}px`;
       progressIndicator.style.height = `${activeItemHeight}px`;
-      
-      // 自动滚动侧边栏，使活动项目可见
+
       const sidebarHeight = sidebar.clientHeight;
       const activeItemBottom = activeItemTop + activeItemHeight;
-      
+
       if (activeItemTop < sidebar.scrollTop) {
-        sidebar.scrollTop = activeItemTop - 20; // 添加一些上部空间
+        sidebar.scrollTop = activeItemTop - 20;
       } else if (activeItemBottom > sidebar.scrollTop + sidebarHeight) {
-        sidebar.scrollTop = activeItemBottom - sidebarHeight + 20; // 添加一些下部空间
+        sidebar.scrollTop = activeItemBottom - sidebarHeight + 20;
       }
     }
   }, [activeHeadingIndex]);
 
+  const handleTocClick = (id, index) => {
+    const targetElement = document.getElementById(id);
+    if (targetElement) {
+      isScrollingRef.current = true;
+      targetElement.scrollIntoView({ behavior: "smooth" });
+      setActiveHeadingIndex(index);
+      window.history.replaceState(null, null, `#${id}`);
+      setTimeout(() => (isScrollingRef.current = false), 500);
+    }
+  };
+
   const renderTopToc = () => {
-    if (headings.length === 0) return null;
-    
+    if (!headings || headings.length === 0) return null;
+
     return (
-      <div className={`top-toc ${isTopTocExpanded ? 'expanded' : 'collapsed'}`}>
+      <div className={`top-toc ${isTopTocExpanded ? "expanded" : "collapsed"}`}>
         <div className="top-toc-header" onClick={() => setIsTopTocExpanded(!isTopTocExpanded)}>
           <h3>目录概览</h3>
-          <button className="expand-button">
-            {isTopTocExpanded ? '收起' : '展开'}
-          </button>
+          <button className="expand-button">{isTopTocExpanded ? "收起" : "展开"}</button>
         </div>
-        
         {isTopTocExpanded && (
           <div className="top-toc-content">
             <ul className="top-toc-list">
               {headings.map((heading, index) => (
-                <li 
-                  key={heading.id}
-                  className={`top-toc-item depth-${heading.depth} ${index === activeHeadingIndex ? 'active' : ''}`}
+                <li
+                  key={index} // 使用 index 作为 key
+                  className={`top-toc-item depth-${heading.depth} ${
+                    index === activeHeadingIndex ? "active" : ""
+                  }`}
                 >
-                  <a href={`#${heading.id}`}>{heading.text}</a>
+                  <a
+                    href={`#${heading.id}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleTocClick(heading.id, index);
+                    }}
+                  >
+                    {heading.text}
+                  </a>
                 </li>
               ))}
             </ul>
@@ -1931,7 +2547,7 @@ const MarkdownRenderer = ({ content }) => {
   };
 
   const renderSidebar = () => {
-    if (headings.length === 0) return null;
+    if (!headings || headings.length === 0) return null;
 
     return (
       <div className="toc-sidebar lg:w-48" ref={sidebarRef}>
@@ -1940,26 +2556,29 @@ const MarkdownRenderer = ({ content }) => {
           <ul>
             {headings.map((heading, index) => (
               <li
-                key={heading.id}
+                key={index} // 使用 index 作为 key
                 ref={(el) => {
                   sidebarItemsRef.current[index] = el;
-                  if (index === activeHeadingIndex) {
-                    activeItemRef.current = el;
-                  }
+                  if (index === activeHeadingIndex) activeItemRef.current = el;
                 }}
                 className={`toc-level-${Math.min(heading.depth, 4)} ${
                   index === activeHeadingIndex ? "active-heading" : ""
                 }`}
               >
-                <a href={`#${heading.id}`}>{heading.text}</a>
+                <a
+                  href={`#${heading.id}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleTocClick(heading.id, index);
+                  }}
+                >
+                  {heading.text}
+                </a>
               </li>
             ))}
           </ul>
         </div>
-        <div
-          className="toc-progress-indicator"
-          ref={progressIndicatorRef}
-        />
+        <div className="toc-progress-indicator" ref={progressIndicatorRef} />
       </div>
     );
   };
@@ -1968,7 +2587,9 @@ const MarkdownRenderer = ({ content }) => {
     <>
       {renderTopToc()}
       <div className="markdown-container">
-        {htmlContent && <div className="markdown-content" dangerouslySetInnerHTML={{ __html: htmlContent }} />}
+        {htmlContent && (
+          <div className="markdown-content" dangerouslySetInnerHTML={{ __html: htmlContent }} />
+        )}
         {renderSidebar()}
       </div>
     </>
@@ -1976,6 +2597,379 @@ const MarkdownRenderer = ({ content }) => {
 };
 
 export default MarkdownRenderer;
+
+
+================================================
+File: components/RandomJumpButton.jsx
+================================================
+"use client";
+
+import { useRouter } from "next/navigation";
+import { Shuffle } from "lucide-react";
+
+export default function RandomJumpButton({ problems }) {
+  const router = useRouter();
+
+  const handleRandomJump = () => {
+    if (problems.length === 0) return;
+
+    const randomIndex = Math.floor(Math.random() * problems.length);
+    const { slug, problemName } = problems[randomIndex];
+    const problemId = problemName.toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]+/g, "");
+    const url = `/post/${slug}#${problemId}`;
+    router.push(url);
+  };
+
+  return (
+    <button
+      onClick={handleRandomJump}
+      className={`inline-flex items-center px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed`}
+      disabled={problems.length === 0}
+    >
+      <Shuffle className="h-4 w-4 mr-2" />
+      随机跳题
+    </button>
+  );
+}
+
+
+================================================
+File: components/SearchBar.jsx
+================================================
+// components/SearchBar.jsx
+"use client";
+
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { Search } from "lucide-react";
+
+// 安全字符过滤正则表达式
+const SAFE_CHARS_REGEX = /[^\p{L}\p{N}\s'\-_]/gu;
+
+export default function SearchBar() {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const sanitizedQuery = query.replace(SAFE_CHARS_REGEX, "").trim();
+    
+    if (!sanitizedQuery) {
+      setResults([]);
+      return;
+    }
+
+    const debounce = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(sanitizedQuery)}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        setResults(data);
+      } catch (error) {
+        console.error("Search error:", error.message);
+        setResults([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(debounce);
+  }, [query]);
+
+  return (
+    <div className="relative w-full max-w-lg mx-auto">
+      <div className="flex items-center border border-gray-200 rounded-lg bg-white shadow-sm focus-within:ring-2 focus-within:ring-primary">
+        <Search className="h-5 w-5 ml-3 text-gray-400" />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="搜索文章或题目..."
+          className="w-full p-2 outline-none rounded-lg text-gray-700"
+          maxLength={50}
+        />
+        {loading && <span className="mr-3 text-gray-400">加载中...</span>}
+      </div>
+
+      {query && results.length > 0 && (
+        <div className="absolute top-full mt-2 w-full bg-white border border-gray-100 rounded-lg shadow-lg max-h-96 overflow-y-auto z-10">
+          {results.map((item) => (
+            <div key={item.slug} className="p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0">
+              <Link href={`/post/${item.slug}`} className="block">
+                <h3 className="text-base font-medium text-gray-900 hover:text-primary">
+                  {item.title}
+                </h3>
+                <p className="text-sm text-gray-600 line-clamp-2">{item.excerpt}</p>
+                {item.matched_content && (
+                  <p
+                    className="text-sm text-gray-500 mt-1 italic"
+                    dangerouslySetInnerHTML={{ 
+                      __html: `匹配内容: ${item.matched_content
+                        .replace(/</g, "&lt;")
+                        .replace(/>/g, "&gt;")}` 
+                    }}
+                  />
+                )}
+                {/* 安全渲染分类 */}
+                {item?.categories?.length > 0 && (
+                  <div className="mt-1 flex flex-wrap gap-2">
+                    {item.categories.map((cat) => (
+                      <span
+                        key={cat}
+                        className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full"
+                      >
+                        #{cat}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {/* 安全渲染题目 */}
+                {item?.problems?.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-500">相关题目:</p>
+                    {item.problems.map((problem) => (
+                      <Link
+                        key={problem?.id}
+                        href={`/post/${item.slug}#${problem?.name?.toLowerCase().replace(/\s+/g, "-")}`}
+                        className="block text-sm text-secondary hover:text-secondary/80 mt-1"
+                      >
+                        {problem?.id}. {problem?.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </Link>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {query && !loading && results.length === 0 && (
+        <div className="absolute top-full mt-2 w-full bg-white border border-gray-100 rounded-lg shadow-lg p-4 text-center">
+          <p className="text-gray-600">没有找到匹配的结果</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+================================================
+File: db/blog.db
+================================================
+[Non-text file]
+
+
+================================================
+File: lib/generate-sqlite.js
+================================================
+// lib/generate-sqlite.js
+const fs = require("fs");
+const path = require("path");
+const sqlite3 = require("sqlite3").verbose();
+const matter = require("gray-matter");
+const jieba = require("nodejieba");
+
+const PROJECT_ROOT = path.resolve(__dirname, "..");
+const DB_DIR = path.join(PROJECT_ROOT, "db");
+const DB_PATH = path.join(DB_DIR, "blog.db");
+const POSTS_DIR = path.join(PROJECT_ROOT, "content");
+
+const log = {
+  info: (msg) => console.log(`\x1b[36m[INFO]\x1b[0m ${msg}`),
+  success: (msg) => console.log(`\x1b[32m[SUCCESS]\x1b[0m ${msg}`),
+  error: (msg) => console.error(`\x1b[31m[ERROR]\x1b[0m ${msg}`),
+  warn: (msg) => console.warn(`\x1b[33m[WARN]\x1b[0m ${msg}`)
+};
+
+async function initializeDatabase(db) {
+  return new Promise((resolve, reject) => {
+    db.serialize(() => {
+      db.run(`CREATE TABLE IF NOT EXISTS posts (
+        rowid INTEGER PRIMARY KEY AUTOINCREMENT,
+        slug TEXT UNIQUE NOT NULL,
+        title TEXT NOT NULL,
+        excerpt TEXT,
+        categories TEXT,
+        problems TEXT,
+        content TEXT,
+        date DATE NOT NULL
+      )`, (err) => {
+        if (err) return reject(err);
+        log.info("主表 posts 已就绪");
+      });
+
+      db.run(`CREATE VIRTUAL TABLE IF NOT EXISTS posts_fts USING fts5(
+        title,
+        content,
+        tokenize = 'unicode61 remove_diacritics 2'
+      )`, (err) => {
+        if (err) return reject(err);
+        log.info("全文搜索表 posts_fts 已就绪");
+        resolve();
+      });
+    });
+  });
+}
+
+async function processMarkdownFiles(db) {
+  let filenames = [];
+  try {
+    if (!fs.existsSync(POSTS_DIR)) {
+      throw new Error(`文章目录不存在: ${POSTS_DIR}`);
+    }
+
+    filenames = fs.readdirSync(POSTS_DIR)
+      .filter(f => f.endsWith(".md"))
+      .filter(f => {
+        const stats = fs.statSync(path.join(POSTS_DIR, f));
+        return stats.isFile() && stats.size > 0;
+      });
+
+    if (filenames.length === 0) {
+      log.warn(`未找到任何Markdown文件: ${POSTS_DIR}`);
+      return [];
+    }
+
+    log.info(`发现 ${filenames.length} 篇文章，开始处理...`);
+
+    // 开启全局事务
+    await new Promise((resolve, reject) => {
+      db.run("BEGIN TRANSACTION", (err) => {
+        err ? reject(err) : resolve();
+      });
+    });
+
+    // 顺序处理文件
+    for (const filename of filenames) {
+      await new Promise((resolve, reject) => {
+        const filePath = path.join(POSTS_DIR, filename);
+        const { data, content } = matter(fs.readFileSync(filePath, "utf8"));
+        
+        const slug = filename.replace(/\.md$/, "");
+        const title = data.title || content.match(/^#\s+(.+)$/m)?.[1] || "未命名文章";
+        const excerpt = data.excerpt || content.slice(0, 150).replace(/\n/g, " ") + "...";
+        const date = data.date ? new Date(data.date) : new Date();
+
+        const categories = JSON.stringify(
+          Array.isArray(data.categories)
+            ? data.categories
+            : (typeof data.categories === "string" 
+                ? data.categories.split(",").map(s => s.trim())
+                : []
+              ).filter(Boolean)
+        );
+
+        const problems = JSON.stringify(
+          (Array.isArray(data.problems)
+            ? data.problems.map(p => ({
+                id: p.id?.toString() || "",
+                name: String(p.name || ""),
+                tags: Array.isArray(p.tags)
+                  ? p.tags
+                  : typeof p.tags === "string" 
+                    ? p.tags.split(",").map(t => t.trim())
+                    : []
+              })).filter(p => p.id)
+            : [])
+        );
+
+        const tokenize = (text) => jieba.cut(text).join(" ");
+        const ftsContent = tokenize(content);
+
+        db.serialize(() => {
+          db.run(
+            `INSERT OR REPLACE INTO posts 
+            (slug, title, excerpt, categories, problems, content, date)
+            VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [
+              slug,
+              title,
+              excerpt,
+              categories,
+              problems,
+              content,
+              date.toISOString().split("T")[0]
+            ],
+            function(err) {
+              if (err) return reject(err);
+
+              db.run(
+                `INSERT OR REPLACE INTO posts_fts (rowid, title, content)
+                VALUES (?, ?, ?)`,
+                [this.lastID, tokenize(title), ftsContent],
+                (err) => {
+                  if (err) return reject(err);
+                  log.info(`[${slug}] 处理完成`);
+                  resolve();
+                }
+              );
+            }
+          );
+        });
+      });
+    }
+
+    // 提交全局事务
+    await new Promise((resolve, reject) => {
+      db.run("COMMIT", (err) => {
+        err ? reject(err) : resolve();
+      });
+    });
+
+  } catch (error) {
+    // 回滚事务
+    await new Promise((resolve) => db.run("ROLLBACK", resolve));
+    throw new Error(`文件处理失败: ${error.message}`);
+  }
+}
+
+async function generateSQLiteDatabase() {
+  let db;
+  try {
+    if (!fs.existsSync(DB_DIR)) {
+      log.info(`创建数据库目录: ${DB_DIR}`);
+      fs.mkdirSync(DB_DIR, { recursive: true, mode: 0o755 });
+    }
+
+    // 初始化数据库连接
+    log.info(`正在连接数据库: ${DB_PATH}`);
+    db = new sqlite3.Database(DB_PATH);
+
+    await initializeDatabase(db);
+    await processMarkdownFiles(db);
+
+    // 关闭数据库连接
+    await new Promise((resolve, reject) => {
+      db.close(err => err ? reject(err) : resolve());
+    });
+
+    // 验证生成结果
+    const stats = fs.statSync(DB_PATH);
+    log.success(`数据库生成成功！`);
+    log.success(`路径: ${DB_PATH}`);
+    log.success(`大小: ${(stats.size / 1024 / 1024).toFixed(2)} MB`);
+
+  } catch (error) {
+    // 确保关闭数据库连接
+    if (db) {
+      await new Promise(resolve => db.close(resolve));
+    }
+    log.error(`生成失败: ${error.message}`);
+    console.error(error.stack);
+    process.exit(1);
+  }
+}
+
+if (require.main === module) {
+  generateSQLiteDatabase().catch(err => {
+    log.error(`未捕获的错误: ${err.message}`);
+    process.exit(1);
+  });
+}
+
+module.exports = { generateSQLiteDatabase };
 
 
 ================================================
@@ -2002,12 +2996,26 @@ async function getPostMetadata(filename) {
   const wordCount = content.trim().split(/\s+/).length;
   const readingTime = Math.max(1, Math.ceil(wordCount / 200));
 
-  // 确保 categories 始终是数组并去重
   let categories = data.categories || [];
   if (typeof categories === "string") {
     categories = categories.split(",").map((item) => item.trim());
   }
-  categories = [...new Set(categories)]; // 去重
+  categories = [...new Set(categories)];
+
+  const problems = Array.isArray(data.problems)
+    ? data.problems.map((problem) => {
+        let tags = problem.tags || [];
+        if (typeof tags === "string") {
+          tags = tags.split(",").map((item) => item.trim());
+        }
+        tags = [...new Set(tags)];
+        return {
+          id: problem.id || "",
+          name: problem.name || "",
+          tags,
+        };
+      }).filter((p) => p.id)
+    : [];
 
   return {
     slug: filename.replace(".md", ""),
@@ -2016,6 +3024,7 @@ async function getPostMetadata(filename) {
     excerpt,
     readingTime,
     categories,
+    problems,
   };
 }
 
@@ -2033,12 +3042,26 @@ async function getPostData(slug) {
   const wordCount = content.trim().split(/\s+/).length;
   const readingTime = Math.max(1, Math.ceil(wordCount / 200));
 
-  // 确保 categories 始终是数组并去重
   let categories = data.categories || [];
   if (typeof categories === "string") {
     categories = categories.split(",").map((item) => item.trim());
   }
-  categories = [...new Set(categories)]; // 去重
+  categories = [...new Set(categories)];
+
+  const problems = Array.isArray(data.problems)
+    ? data.problems.map((problem) => {
+        let tags = problem.tags || [];
+        if (typeof tags === "string") {
+          tags = tags.split(",").map((item) => item.trim());
+        }
+        tags = [...new Set(tags)];
+        return {
+          id: problem.id || "",
+          name: problem.name || "",
+          tags,
+        };
+      }).filter((p) => p.id)
+    : [];
 
   return {
     slug: decodedSlug,
@@ -2048,6 +3071,7 @@ async function getPostData(slug) {
     excerpt: data.excerpt || createExcerpt(content),
     readingTime,
     categories,
+    problems,
   };
 }
 
@@ -2072,6 +3096,103 @@ module.exports = { getMarkdownFiles, getPostMetadata, getPostData };
 
 
 ================================================
+File: lib/search-sqlite.js
+================================================
+// lib/search-sqlite.js
+const sqlite3 = require("sqlite3").verbose();
+const path = require("path");
+const jieba = require("nodejieba");
+const fs = require("fs");
+
+const DB_PATH = path.resolve(process.cwd(), "db/blog.db");
+
+let dbInstance = null;
+
+// FTS5 查询特殊字符转义函数
+const escapeFTS5Query = (term) => {
+  return term.replace(/['"\\]/g, (match) => `\\${match}`)
+            .replace(/\*/g, ""); // 移除可能引起问题的通配符
+};
+
+function getDatabase() {
+  if (!dbInstance) {
+    if (!fs.existsSync(DB_PATH)) {
+      throw new Error(`数据库文件不存在: ${DB_PATH}`);
+    }
+
+    dbInstance = new sqlite3.Database(DB_PATH, sqlite3.OPEN_READONLY, (err) => {
+      if (err) throw new Error(`数据库连接失败: ${err.message}`);
+    });
+
+    // 添加连接健康检查
+    dbInstance.get("SELECT name FROM sqlite_master WHERE type='table'", (err) => {
+      if (err) throw new Error("数据库表结构异常");
+    });
+  }
+  return dbInstance;
+}
+
+async function searchPosts(query) {
+  if (typeof query !== "string" || query.trim().length < 1) {
+    return [];
+  }
+
+  const db = getDatabase();
+  const terms = jieba.cut(query);
+  
+  // 构建安全查询语句
+  const safeQuery = terms
+    .map(t => `${escapeFTS5Query(t)}*`) // 每个分词后加通配符
+    .join(" ");
+
+  try {
+    return new Promise((resolve, reject) => {
+      db.all(
+        `SELECT 
+          p.slug,
+          p.title,
+          p.excerpt,
+          p.date,
+          snippet(posts_fts, 1, '<mark>', '</mark>', '...', 30) AS snippet,
+          bm25(posts_fts) AS score
+        FROM posts_fts
+        INNER JOIN posts p ON posts_fts.rowid = p.rowid
+        WHERE posts_fts MATCH ?
+        ORDER BY score
+        LIMIT 20`,
+        [safeQuery], // 使用转义后的安全查询
+        (err, rows) => {
+          if (err) return reject(new Error(`查询失败: ${err.message}`));
+          
+          const results = rows.map(row => ({
+            ...row,
+            snippet: row.snippet
+              .replace(/\s+/g, " ")
+              .replace(/\\'/g, "'") // 还原转义的单引号
+          }));
+          resolve(results);
+        }
+      );
+    });
+  } catch (error) {
+    console.error("搜索处理失败:", error.message);
+    return [];
+  } finally {
+    // 保持连接开放以供复用
+  }
+}
+
+process.on("beforeExit", () => {
+  if (dbInstance) {
+    dbInstance.close();
+    dbInstance = null;
+  }
+});
+
+module.exports = { searchPosts };
+
+
+================================================
 File: lib/utils.js
 ================================================
 import { clsx } from "clsx";
@@ -2081,4 +3202,43 @@ export function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
+
+
+================================================
+File: scipts/init-db.js
+================================================
+// scripts/init-db.js
+const { generateSQLiteDatabase } = require('../lib/generate-sqlite');
+const path = require('path');
+const fs = require('fs');
+
+const DB_DIR = path.join(process.cwd(), 'db');
+const DB_PATH = path.join(DB_DIR, 'blog.db');
+
+async function setup() {
+  try {
+    // 确保db目录存在
+    if (!fs.existsSync(DB_DIR)) {
+      fs.mkdirSync(DB_DIR, { recursive: true });
+      console.log(`创建数据库目录: ${DB_DIR}`);
+    }
+
+    // 检查已有数据库文件
+    if (fs.existsSync(DB_PATH)) {
+      const stats = fs.statSync(DB_PATH);
+      console.log(`数据库已存在，大小: ${(stats.size / 1024).toFixed(2)} KB`);
+      return;
+    }
+
+    // 生成数据库
+    console.log('开始生成数据库...');
+    await generateSQLiteDatabase();
+    console.log('数据库初始化完成');
+  } catch (error) {
+    console.error('初始化失败:', error);
+    process.exit(1);
+  }
+}
+
+setup();
 
