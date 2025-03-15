@@ -3,24 +3,22 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "cross-env NODE_OPTIONS=\"--experimental-json-modules --unhandled-rejections=strict\" next dev",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "db:init": "node scripts/init-db.js",
     "db:reset": "rimraf db/blog.db* && npm run db:init"
   },
   "browser": {
-    "nodejieba": false,
     "sqlite3": false,
     "@mapbox/node-pre-gyp": false
   },
   "dependencies": {
     "gray-matter": "^4.0.3",
-    "jieba": "^1.0.0",
+    "jieba-wasm": "^2.2.0",
     "katex": "^0.16.21",
     "lucide-react": "^0.294.0",
     "next": "14.0.4",
-    "nodejieba": "^3.4.4",
     "prismjs": "^1.30.0",
     "react": "^18",
     "react-dom": "^18",
@@ -42,6 +40,7 @@
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.16",
     "autoprefixer": "^10.4.15",
+    "copy-webpack-plugin": "^13.0.0",
     "cross-env": "^7.0.3",
     "eslint": "^8",
     "eslint-config-next": "14.0.4",

@@ -12,6 +12,7 @@ export default function SearchBar({ autoFocus = false, onSearch = () => {} }) {
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [error, setError] = useState(null); // 新增错误状态
   const searchRef = useRef(null);
   const inputRef = useRef(null);
   const resultsRef = useRef(null);
@@ -19,24 +20,31 @@ export default function SearchBar({ autoFocus = false, onSearch = () => {} }) {
   // 搜索逻辑
   useEffect(() => {
     const sanitizedQuery = query.replace(SAFE_CHARS_REGEX, "").trim();
-    
+
     if (!sanitizedQuery) {
       setResults([]);
       setIsOpen(false);
+      setError(null);
       return;
     }
 
     const debounce = setTimeout(async () => {
       setLoading(true);
+      setError(null);
       try {
+        console.log("发送请求:", `/api/search?q=${encodeURIComponent(sanitizedQuery)}`); // 添加日志
         const res = await fetch(`/api/search?q=${encodeURIComponent(sanitizedQuery)}`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
         const data = await res.json();
+        console.log("搜索响应:", data); // 添加日志
         setResults(data);
         setIsOpen(true);
-        setSelectedIndex(-1); // 重置选中项
+        setSelectedIndex(-1);
       } catch (error) {
         console.error("Search error:", error.message);
+        setError(`搜索失败: ${error.message}`); // 显示错误
         setResults([]);
       } finally {
         setLoading(false);
@@ -58,37 +66,40 @@ export default function SearchBar({ autoFocus = false, onSearch = () => {} }) {
   }, []);
 
   // 处理键盘导航
-  const handleKeyDown = useCallback((e) => {
-    if (!isOpen) return;
-    
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setSelectedIndex(prev => 
-        prev < getFlattenedResultsLength() - 1 ? prev + 1 : 0
-      );
-      ensureSelectedVisible();
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setSelectedIndex(prev => 
-        prev > 0 ? prev - 1 : getFlattenedResultsLength() - 1
-      );
-      ensureSelectedVisible();
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      if (selectedIndex >= 0) {
-        navigateToSelectedResult();
-      } else if (results.length > 0) {
-        const firstMatch = results[0].matches[0];
-        navigateToResult(results[0], firstMatch);
+  const handleKeyDown = useCallback(
+    (e) => {
+      if (!isOpen) return;
+
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setSelectedIndex((prev) =>
+          prev < getFlattenedResultsLength() - 1 ? prev + 1 : 0
+        );
+        ensureSelectedVisible();
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setSelectedIndex((prev) =>
+          prev > 0 ? prev - 1 : getFlattenedResultsLength() - 1
+        );
+        ensureSelectedVisible();
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        if (selectedIndex >= 0) {
+          navigateToSelectedResult();
+        } else if (results.length > 0) {
+          const firstMatch = results[0].matches[0];
+          navigateToResult(results[0], firstMatch);
+        }
+      } else if (e.key === "Escape") {
+        setIsOpen(false);
       }
-    } else if (e.key === 'Escape') {
-      setIsOpen(false);
-    }
-  }, [isOpen, selectedIndex, results]);
+    },
+    [isOpen, selectedIndex, results]
+  );
 
   useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
   // 获取扁平化后的所有可点击结果数量
@@ -103,9 +114,11 @@ export default function SearchBar({ autoFocus = false, onSearch = () => {} }) {
   // 确保选中的项在视图中可见
   const ensureSelectedVisible = () => {
     if (resultsRef.current && selectedIndex >= 0) {
-      const selectedElement = resultsRef.current.querySelector(`[data-index="${selectedIndex}"]`);
+      const selectedElement = resultsRef.current.querySelector(
+        `[data-index="${selectedIndex}"]`
+      );
       if (selectedElement) {
-        selectedElement.scrollIntoView({ block: 'nearest' });
+        selectedElement.scrollIntoView({ block: "nearest" });
       }
     }
   };
@@ -132,8 +145,8 @@ export default function SearchBar({ autoFocus = false, onSearch = () => {} }) {
 
   // 导航到特定结果
   const navigateToResult = (item, match) => {
-    window.location.href = match.nearest_heading 
-      ? `/post/${item.slug}#${match.heading_id}` 
+    window.location.href = match.nearest_heading
+      ? `/post/${item.slug}#${match.heading_id}`
       : `/post/${item.slug}`;
     onSearch();
   };
@@ -143,6 +156,7 @@ export default function SearchBar({ autoFocus = false, onSearch = () => {} }) {
     setQuery("");
     setResults([]);
     setIsOpen(false);
+    setError(null);
     inputRef.current?.focus();
   };
 
@@ -159,12 +173,12 @@ export default function SearchBar({ autoFocus = false, onSearch = () => {} }) {
     if (!context) return "";
     const plainText = context.replace(/<mark>|<\/mark>/g, "");
     if (plainText.length <= maxLength) return context;
-    
+
     const truncated = plainText.substring(0, maxLength);
     const lastSpace = truncated.lastIndexOf(" ");
     const baseText = lastSpace > 0 ? truncated.substring(0, lastSpace) : truncated;
-    
-    return context.includes("<mark>") 
+
+    return context.includes("<mark>")
       ? context.replace(plainText, baseText + "...")
       : baseText + "...";
   };
@@ -191,7 +205,7 @@ export default function SearchBar({ autoFocus = false, onSearch = () => {} }) {
           }}
         />
         {query && (
-          <button 
+          <button
             onClick={clearSearch}
             className="p-1.5 text-[#A89B8C] hover:text-[#5D534B] transition-colors"
             aria-label="清空搜索"
@@ -202,7 +216,7 @@ export default function SearchBar({ autoFocus = false, onSearch = () => {} }) {
         <button
           onClick={executeSearch}
           className={`p-2 mr-2 text-white bg-[#D2C5B0] rounded-full hover:bg-[#BEA992] transition-colors ${
-            loading || !query || results.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
+            loading || !query || results.length === 0 ? "opacity-50 cursor-not-allowed" : ""
           }`}
           disabled={loading || !query || results.length === 0}
           aria-label="执行搜索"
@@ -215,23 +229,25 @@ export default function SearchBar({ autoFocus = false, onSearch = () => {} }) {
         </button>
       </div>
 
+      {error && <p className="text-red-500 mt-2">{error}</p>} {/* 显示错误 */}
+
       {isOpen && (
-        <div 
+        <div
           ref={resultsRef}
           className="absolute top-full mt-2 w-full bg-[#F9F7F4] border border-[#E5DDD3] rounded-lg shadow-lg max-h-[80vh] overflow-y-auto z-10"
         >
           {results.length > 0 ? (
             <div className="divide-y divide-[#E5DDD3]">
-              {results.map((item) => {
+             {results.map((item) => {
                 const titleIndex = resultIndex++;
-                
+
                 return (
                   <div key={item.slug} className="p-4">
-                    <h3 
+                    <h3
                       className={`text-base font-medium hover:text-[#A67C52] transition-colors ${
-                        selectedIndex === titleIndex 
-                          ? 'bg-[#F0EBE4] text-[#A67C52] p-2 rounded' 
-                          : 'text-[#5D534B] p-2'
+                        selectedIndex === titleIndex
+                          ? "bg-[#F0EBE4] text-[#A67C52] p-2 rounded"
+                          : "text-[#5D534B] p-2"
                       }`}
                       data-index={titleIndex}
                     >
@@ -240,11 +256,11 @@ export default function SearchBar({ autoFocus = false, onSearch = () => {} }) {
                         <ArrowRight className="h-4 w-4 ml-1 opacity-70" />
                       </Link>
                     </h3>
-                    
+
                     {item.excerpt && (
                       <p className="text-sm text-[#7D7068] ml-2 mb-3 line-clamp-1">{item.excerpt}</p>
                     )}
-                    
+
                     {item.categories?.length > 0 && (
                       <div className="flex flex-wrap gap-2 ml-2 mb-3">
                         {item.categories.map((cat) => (
@@ -257,38 +273,42 @@ export default function SearchBar({ autoFocus = false, onSearch = () => {} }) {
                         ))}
                       </div>
                     )}
-                    
+
                     {item.matches.length > 0 && (
                       <div className="mt-3 space-y-2 bg-[#F0EBE4] p-3 rounded-md">
-                        <h4 className="text-xs uppercase tracking-wider text-[#8A7B6D] font-medium mb-2">匹配内容</h4>
+                        <h4 className="text-xs uppercase tracking-wider text-[#8A7B6D] font-medium mb-2">
+                          匹配内容
+                        </h4>
                         <div className="space-y-3 max-h-[200px] overflow-y-auto pr-1">
                           {item.matches.map((match, index) => {
                             const matchIndex = resultIndex++;
-                            
+
                             return (
-                              <div 
+                              <div
                                 key={index}
                                 className={`p-2 rounded border-l-2 ${
-                                  selectedIndex === matchIndex 
-                                    ? 'bg-[#E9E2D8] border-[#BEA992]' 
-                                    : 'bg-white/50 border-transparent'
+                                  selectedIndex === matchIndex
+                                    ? "bg-[#E9E2D8] border-[#BEA992]"
+                                    : "bg-white/50 border-transparent"
                                 }`}
                                 data-index={matchIndex}
                               >
-                                <Link 
-                                  href={match.nearest_heading 
-                                    ? `/post/${item.slug}#${match.heading_id}` 
-                                    : `/post/${item.slug}`}
+                                <Link
+                                  href={
+                                    match.nearest_heading
+                                      ? `/post/${item.slug}#${match.heading_id}`
+                                      : `/post/${item.slug}`
+                                  }
                                   className="block"
                                   onClick={onSearch}
                                 >
                                   <p
                                     className="text-sm text-[#5D534B]"
-                                    dangerouslySetInnerHTML={{ 
+                                    dangerouslySetInnerHTML={{
                                       __html: truncateContext(match.content).replace(
-                                        /<mark>/g, 
+                                        /<mark>/g,
                                         '<mark class="bg-[#D2C5B0]/30 text-[#5D534B] px-0.5 rounded">'
-                                      ) 
+                                      ),
                                     }}
                                   />
                                   {match.nearest_heading && (
