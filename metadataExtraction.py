@@ -66,7 +66,7 @@ def process_markdown_file(input_file, output_file, start_id):
         f.write(output_content)
 
 # 使用示例
-input_file = '刷题日记25-03-14.md'
+input_file = '刷题日记25-03-18.md'
 output_file = 'output.md'
-start_id = 53
+start_id = 66
 process_markdown_file(input_file, output_file, start_id)
