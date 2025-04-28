@@ -4,12 +4,12 @@ def extract_problems_from_markdown(file_path, start_id):
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
     
-    # 匹配二级标题及其后的标签行
-    pattern = r'##\s+([^\n]+)\n\n([^\n]+)'
+    # 匹配：## 二级标题 后若干空行 后标签行
+    pattern = r'##\s+([^\n]+)\n+([^\n]+)'
     matches = re.findall(pattern, content)
     
     problems = []
-    problem_id = start_id  # 从12开始，根据示例
+    problem_id = start_id  
     
     for title, tags_line in matches:
         # 提取标题作为问题名称
@@ -17,19 +17,21 @@ def extract_problems_from_markdown(file_path, start_id):
         
         # 处理标签行
         tags = []
-        # 先提取括号内的内容（如果有）
+
+        # 提取所有括号内容（中文括号、英文括号）
+        bracket_parts = re.findall(r'[\(（](.*?)[\)）]', tags_line)
         bracket_content = []
-        if '（' in tags_line and '）' in tags_line:
-            bracket_part = tags_line[tags_line.find('（')+1:tags_line.find('）')]
-            bracket_content = [tag.strip() for tag in bracket_part.split('，')]
-            # 移除括号及其内容，保留前面的部分
-            tags_line = tags_line[:tags_line.find('（')].strip()
-        
-        # 处理括号前的标签（如果有）
+        for part in bracket_parts:
+            bracket_content.extend(tag.strip() for tag in re.split('[，,]', part))
+
+        # 移除所有括号及其中内容
+        tags_line = re.sub(r'[\(（].*?[\)）]', '', tags_line).strip()
+
+        # 处理括号外的标签，按中文逗号或英文逗号分隔
         if tags_line:
-            tags.extend([tag.strip() for tag in tags_line.split('，')])
+            tags.extend(tag.strip() for tag in re.split('[，,]', tags_line))
         
-        # 添加括号内的标签
+        # 添加括号里的标签
         tags.extend(bracket_content)
         
         # 创建问题字典
@@ -46,9 +48,10 @@ def extract_problems_from_markdown(file_path, start_id):
 def generate_metadata(problems):
     metadata = '---\nproblems:\n'
     for problem in problems:
+        safe_name = problem["name"].replace('"', '\\"')  # 转义双引号
         metadata += f'  - id: "{problem["id"]}"\n'
-        metadata += f'    name: "{problem["name"]}"\n'
-        tags_str = ', '.join(f'"{tag}"' for tag in problem['tags'])
+        metadata += f'    name: "{safe_name}"\n'
+        tags_str = ', '.join('"' + tag.replace('"', '\\"') + '"' for tag in problem['tags'])
         metadata += f'    tags: [{tags_str}]\n'
     metadata += '---\n'
     return metadata
@@ -65,8 +68,9 @@ def process_markdown_file(input_file, output_file, start_id):
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write(output_content)
 
-# 使用示例
-input_file = '刷题日记25-03-18.md'
-output_file = 'output.md'
-start_id = 66
-process_markdown_file(input_file, output_file, start_id)
+# 示例使用
+if __name__ == "__main__":
+    input_file = '刷题日记25-04-28.md'
+    output_file = 'output.md'
+    start_id = 72
+    process_markdown_file(input_file, output_file, start_id)
